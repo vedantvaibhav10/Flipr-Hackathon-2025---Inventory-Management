@@ -1,6 +1,7 @@
 const Product = require('../models/product.model');
 const colors = require('colors');
 const { uploadOnCloudinary, deleteFromCloudinary } = require('../utils/cloudinary.util');
+const openai = require('../services/openai.service');
 
 const createProduct = async (req, res) => {
     try {
@@ -174,9 +175,63 @@ const deleteProduct = async (req, res) => {
     }
 }
 
+const generateDescription = async (req, res) => {
+    try {
+        const { name, category } = req.body;
+        if (!name || !category) {
+            return res.status(400).json({ success: false, message: 'Product name and category are required.' });
+        }
+
+        const prompt = `Write a concise and professional product description for a new inventory item. The product name is '${name}' and its category is '${category}'. Keep it under 50 words.`;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: prompt }],
+        });
+
+        const description = response.choices[0].message.content.trim();
+
+        console.log(`Generated AI description: ${description}`.blue);
+
+        return res.status(200).json({ success: true, description });
+
+    } catch (error) {
+        console.error('Error generating AI description:', error);
+        return res.status(500).json({ success: false, message: 'Failed to generate AI description.' });
+    }
+};
+
+const suggestCategory = async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name) {
+            return res.status(400).json({ success: false, message: 'Product name is required.' });
+        }
+        const existingCategories = await Product.distinct('category');
+        const prompt = `Given a new product named '${name}', suggest the best category for it from this list: [${existingCategories.join(', ')}]. Respond with only the single best category name and nothing else.`;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: prompt }],
+        });
+
+        const category = response.choices[0].message.content.trim();
+
+        console.log(`Suggested category: ${category}`.blue);
+
+        return res.status(200).json({ success: true, suggestedCategory: category });
+
+    } catch (error) {
+        console.error('Error suggesting category:', error);
+        return res.status(500).json({ success: false, message: 'Failed to suggest category.' });
+    }
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    generateDescription,
+    suggestCategory
 }

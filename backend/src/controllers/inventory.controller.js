@@ -2,6 +2,7 @@ const Product = require('../models/product.model');
 const InventoryLog = require('../models/inventoryLog.model');
 const sendEmail = require('../services/email.service');
 const colors = require('colors');
+const openai = require('../services/openai.service');
 
 const updateStock = async (req, res) => {
     try {
@@ -61,10 +62,17 @@ const updateStock = async (req, res) => {
             quantityChange: quantityChangeValue,
         });
 
-        if(product.stockLevel < product.threshold) {
-            const subject = `Low Stock Alert: ${product.name}`;
-            const html = `<p>Product <b>${product.name}</b> (SKU: ${product.sku}) is running low on stock. Current level: ${product.stockLevel}, Threshold: ${product.threshold}.</p>`;
-            await sendEmail(process.env.ADMIN_EMAIL, subject, html);
+        if (product.stockLevel < product.threshold) {
+            const prompt = `Draft a concise low-stock alert email body. The product '${product.name}' (SKU: ${product.sku}) is critically low. Current stock is ${product.stockLevel}, but the threshold is ${product.threshold}. Emphasize the urgency and recommend an immediate reorder.`;
+
+            const response = await openai.chat.completions.create({
+                model: "gpt-3.5-turbo",
+                messages: [{ role: "user", content: prompt }],
+            });
+
+            const subject = `URGENT: Low Stock Alert for ${product.name}`;
+            const htmlContent = `<p>${response.choices[0].message.content.trim()}</p>`;
+            await sendEmail(process.env.ADMIN_EMAIL, subject, htmlContent);
         }
 
         return res.status(200).json({
