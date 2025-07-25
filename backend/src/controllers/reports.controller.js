@@ -6,65 +6,87 @@ const openai = require('../services/openai.service');
 
 const getDashboardSummary = async (req, res) => {
     try {
-        const summary = await Product.aggregate([
+        const productStats = await Product.aggregate([
             {
                 $facet: {
-                    "generalStats": [
-                        {
-                            $group: {
-                                _id: null,
-                                totalProducts: { $sum: 1 },
-                                totalStockValue: {$sum: "$stockLevel"}
-                            }
-                        },
-                        {$project: {_id: 0}}
+                    "general": [
+                        { $group: { _id: null, totalProducts: { $sum: 1 }, totalStockValue: { $sum: { $multiply: ["$stockLevel", "$buyingPrice"] } } } },
+                        { $project: { _id: 0 } }
                     ],
-                    "lowStockItems": [
-                        {
-                            $match: {
-                                $expr: {
-                                    $lt: ["$stockLevel", "$threshold"]
-                                }
-                            }
-                        },
-                        {$count: "count"}
+                    "lowStock": [
+                        { $match: { $expr: { $lt: ["$stockLevel", "$threshold"] } } },
+                        { $count: "count" }
                     ],
-                    "stockByCategory": [
-                        {
-                            $group: {
-                                _id: "$category",
-                                totalStock: { $sum: "$stockLevel" }
-                            }
-                        },
-                        {$sort: { totalStock: -1 }}
+                    "categories": [
+                        { $group: { _id: "$category", count: { $sum: 1 } } },
+                        { $project: { _id: 0, name: "$_id", count: 1 } }
                     ]
                 }
             }
         ]);
 
-        const responseData = {
-            totalProducts: summary[0].generalStats[0]?.totalProducts || 0,
-            totalStockValue: summary[0].generalStats[0]?.totalStockValue || 0,
-            lowStockCount: summary[0].lowStockItems[0]?.count || 0,
-            stockByCategory: summary[0].stockByCategory,
-        }
+        const salesStats = await InventoryLog.aggregate([
+            { $match: { actionType: 'SALE' } },
+            { $lookup: { from: 'products', localField: 'product', foreignField: '_id', as: 'productDetails' } },
+            { $unwind: '$productDetails' },
+            {
+                $group: {
+                    _id: null,
+                    totalSales: { $sum: { $abs: "$quantityChange" } },
+                    totalRevenue: { $sum: { $multiply: [{ $abs: "$quantityChange" }, "$productDetails.sellingPrice"] } },
+                    totalCost: { $sum: { $multiply: [{ $abs: "$quantityChange" }, "$productDetails.buyingPrice"] } }
+                }
+            },
+            { $project: { _id: 0, totalSales: 1, totalRevenue: 1, totalProfit: { $subtract: ["$totalRevenue", "$totalCost"] } } }
+        ]);
 
-        console.log(`Dashboard summary fetched: ${JSON.stringify(responseData)}`.blue);
+        const purchaseStats = await Order.aggregate([
+            {
+                $group: {
+                    _id: "$status",
+                    totalValue: { $sum: "$orderValue" },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
 
-        return res.status(200).json({
-            success: true,
-            message: 'Dashboard summary fetched successfully.',
-            data: responseData
-        });
+        const formattedPurchaseStats = purchaseStats.reduce((acc, item) => {
+            acc[item._id.toLowerCase()] = { value: item.totalValue, count: item.count };
+            return acc;
+        }, {});
+
+
+        const summary = {
+            inventorySummary: {
+                quantityInHand: productStats[0].general[0]?.totalStockValue || 0,
+                toBeReceived: formattedPurchaseStats.ordered?.count || 0,
+            },
+            productSummary: {
+                numberOfCategories: productStats[0].categories.length || 0,
+                totalProducts: productStats[0].general[0]?.totalProducts || 0,
+            },
+            salesOverview: {
+                sales: salesStats[0]?.totalSales || 0,
+                revenue: salesStats[0]?.totalRevenue || 0,
+                profit: salesStats[0]?.totalProfit || 0,
+                cost: salesStats[0]?.totalCost || 0,
+            },
+            purchaseOverview: {
+                purchase: (formattedPurchaseStats.delivered?.count || 0) + (formattedPurchaseStats.shipped?.count || 0),
+                cost: (formattedPurchaseStats.delivered?.value || 0) + (formattedPurchaseStats.shipped?.value || 0),
+                cancel: formattedPurchaseStats.cancelled?.count || 0,
+                return: formattedPurchaseStats.returned?.count || 0,
+            },
+            lowStockCount: productStats[0].lowStock[0]?.count || 0
+        };
+
+        res.status(200).json({ success: true, data: summary });
+
+    } catch (error) {
+        console.error(`Error generating dashboard summary: ${error.message}`);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
     }
-    catch (error) {
-        console.error(`Error fetching dashboard summary: ${error.message}`.red);
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error.'
-        });
-    }
-}
+};
 
 const exportProducts = async (req, res) => {
     try {
