@@ -1,6 +1,8 @@
 const Product = require('../models/product.model');
 const colors = require('colors');
 const { Parser } = require('json2csv');
+const InventoryLog = require('../models/inventoryLog.model');
+const openai = require('../services/openai.service');
 
 const getDashboardSummary = async (req, res) => {
     try {
@@ -86,7 +88,38 @@ const exportProducts = async (req, res) => {
     }
 };
 
+const getProductForecast = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const salesLogs = await InventoryLog.find({ product: id, actionType: 'SALE' }).sort({ createdAt: -1 }).limit(100);
+
+        if (salesLogs.length < 5) {
+            return res.status(400).json({ success: false, message: 'Not enough sales data to generate a forecast.' });
+        }
+
+        const salesDataString = salesLogs.map(log => `Date: ${log.createdAt.toISOString().split('T')[0]}, Quantity: ${-log.quantityChange}`).join('; ');
+
+        const prompt = `Based on the following recent sales data for a product: "${salesDataString}". Analyze the trend and predict the likely sales demand for the next 30 days. Provide a short, one-paragraph summary.`;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: prompt }],
+        });
+
+        const forecast = response.choices[0].message.content.trim();
+
+        console.log(`Generated forecast: ${forecast}`.blue);
+
+        return res.status(200).json({ success: true, forecast });
+
+    } catch (error) {
+        console.error('Error generating forecast:', error);
+        return res.status(500).json({ success: false, message: 'Failed to generate forecast.' });
+    }
+};
+
 module.exports = {
     getDashboardSummary,
-    exportProducts
+    exportProducts,
+    getProductForecast
 }
