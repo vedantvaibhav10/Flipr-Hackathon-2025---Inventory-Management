@@ -28,11 +28,22 @@ const productSchema = new mongoose.Schema({
         required: true,
         default: 10,
     },
+    buyingPrice: {
+        type: Number,
+        required: [true, 'Buying price is required.'],
+    },
+    sellingPrice: {
+        type: Number,
+        required: [true, 'Selling price is required.'],
+    },
+    expiryDate: {
+        type: Date,
+    },
     image: {
-        public_id: {type: String},
-        url: {type: String},
-    }
+        public_id: { type: String },
+        url: { type: String },
+    },
 }, { timestamps: true });
 
-const Product = mongoose.model('Product', productSchema);
+const Product = mongoose.model("Product", productSchema);
 module.exports = Product;

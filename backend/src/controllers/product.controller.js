@@ -5,12 +5,14 @@ const openai = require('../services/openai.service');
 
 const createProduct = async (req, res) => {
     try {
-        const { name, sku, category, stockLevel, threshold } = req.body;
+        console.log('Received body for create:', req.body);
 
-        if (!name || !sku || !category) {
+        const { name, sku, category, stockLevel, threshold, buyingPrice, sellingPrice, expiryDate } = req.body;
+
+        if (!name || !sku || !category || !buyingPrice || !sellingPrice) {
             return res.status(400).json({
                 success: false,
-                message: 'Name, SKU, and category are required.'
+                message: 'Name, SKU, category, buying price, and selling price are required.'
             });
         }
 
@@ -19,8 +21,11 @@ const createProduct = async (req, res) => {
             sku,
             category,
             stockLevel,
-            threshold
-        }
+            threshold,
+            buyingPrice,
+            sellingPrice,
+            expiryDate
+        };
 
         if (req.file) {
             const imageUploadResponse = await uploadOnCloudinary(req.file.path);
@@ -85,7 +90,7 @@ const getAllProducts = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, sku, category, stockLevel, threshold } = req.body;
+        const { name, sku, category, stockLevel, threshold, buyingPrice, sellingPrice, expiryDate } = req.body;
 
         const product = await Product.findById(id);
         if (!product) {
@@ -123,6 +128,9 @@ const updateProduct = async (req, res) => {
         product.category = category || product.category;
         product.stockLevel = stockLevel !== undefined ? stockLevel : product.stockLevel;
         product.threshold = threshold !== undefined ? threshold : product.threshold;
+        product.buyingPrice = buyingPrice || product.buyingPrice;
+        product.sellingPrice = sellingPrice || product.sellingPrice;
+        product.expiryDate = expiryDate || product.expiryDate;
 
         const updatedProduct = await product.save();
 
