@@ -4,6 +4,8 @@ Welcome to the backend API for the Inventory Management System. This document pr
 
 This powerful and secure RESTful API is built with Node.js, Express, and MongoDB. It includes role-based access control, automated email alerts, advanced data reporting, and intelligent features powered by AI.
 
+Deployed Link - [https://inventory-management-backend-j0w6.onrender.com](https://inventory-management-backend-j0w6.onrender.com)
+
 ## Table of Contents
 1.  [Project Setup](#project-setup)
     -   [Prerequisites](#prerequisites)
