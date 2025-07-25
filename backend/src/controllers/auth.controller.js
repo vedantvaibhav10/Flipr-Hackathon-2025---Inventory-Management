@@ -141,8 +141,9 @@ const loginUser = async (req, res) => {
 
         const options = {
             httpOnly: true,
+            expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000),
             secure: process.env.NODE_ENV === 'production',
-            expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000)
+            sameSite: 'None'
         };
 
         const userResponse = user.toObject();
@@ -168,7 +169,8 @@ const logoutUser = async (req, res) => {
     try {
         const options = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production'
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'None'
         };
 
         return res.status(200).clearCookie('token', options).json({

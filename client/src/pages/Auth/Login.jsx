@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Import Link
 import { useAuth } from '../../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { LogIn, Loader2 } from 'lucide-react';
@@ -84,6 +84,16 @@ const Login = () => {
                         </motion.button>
                     </div>
                 </form>
+
+                {/* --- ADD THIS SECTION --- */}
+                <p className="text-sm text-center text-text-secondary">
+                    Don't have an account?{' '}
+                    <Link to="/register" className="font-medium text-accent hover:underline">
+                        Register here
+                    </Link>
+                </p>
+                {/* --- END OF SECTION --- */}
+
             </motion.div>
         </div>
     );
