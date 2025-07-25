@@ -1,6 +1,9 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+
+// A vibrant, beautiful color palette for our charts
+const CHART_COLORS = ['#58A6FF', '#3FB950', '#F778BA', '#A371F7', '#E8C547'];
 
 const CategoryChart = ({ data, loading }) => {
     if (loading) {
@@ -10,6 +13,18 @@ const CategoryChart = ({ data, loading }) => {
             </div>
         );
     }
+
+    const CustomTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-secondary p-2 border border-border rounded-md shadow-lg">
+                    <p className="text-text-secondary">{label}</p>
+                    <p className="text-text-primary font-bold">{`Total Stock: ${payload[0].value}`}</p>
+                </div>
+            );
+        }
+        return null;
+    };
 
     return (
         <motion.div
@@ -23,16 +38,14 @@ const CategoryChart = ({ data, loading }) => {
                 <ResponsiveContainer>
                     <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                        <XAxis dataKey="_id" stroke="var(--text-secondary)" />
-                        <YAxis stroke="var(--text-secondary)" />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: 'var(--secondary)',
-                                borderColor: 'var(--border)',
-                                color: 'var(--text-primary)'
-                            }}
-                        />
-                        <Bar dataKey="totalStock" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+                        <XAxis dataKey="_id" stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)' }} />
+                        <YAxis stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)' }} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--secondary)' }} />
+                        <Bar dataKey="totalStock" radius={[4, 4, 0, 0]}>
+                            {data.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                        </Bar>
                     </BarChart>
                 </ResponsiveContainer>
             </div>
