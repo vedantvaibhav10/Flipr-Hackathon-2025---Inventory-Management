@@ -25,18 +25,18 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                     onClick={onClose}
                 >
                     <motion.div
-                        className="bg-primary rounded-lg shadow-xl w-full max-w-lg border border-border"
+                        className="bg-primary rounded-lg shadow-xl w-full max-w-lg border border-border flex flex-col max-h-[90vh]" // <-- CHANGE HERE
                         variants={modalVariants}
                         exit="exit"
-                        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="flex items-center justify-between p-4 border-b border-border">
+                        <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
                             <h2 className="text-xl font-semibold text-text-primary">{title}</h2>
                             <button onClick={onClose} className="text-text-secondary hover:text-text-primary">
                                 <X size={24} />
                             </button>
                         </div>
-                        <div className="p-6">
+                        <div className="p-6 overflow-y-auto"> {/* <-- CHANGE HERE */}
                             {children}
                         </div>
                     </motion.div>
