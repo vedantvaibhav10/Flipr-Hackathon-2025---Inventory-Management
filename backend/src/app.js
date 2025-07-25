@@ -3,6 +3,8 @@ const colors = require('colors');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const configureCloudinary = require('./config/cloudinary');
+const mainRouter = require('./routes/index');
+const cookieParser = require('cookie-parser');
 
 const PORT = process.env.PORT || 5000;
 
@@ -11,6 +13,9 @@ connectDB();
 configureCloudinary();
 
 app.use(express.json());
+app.use(cookieParser());
+
+app.use('/api/v1', mainRouter);
 
 app.get('/', (req, res) => {
   res.status(200).json({
