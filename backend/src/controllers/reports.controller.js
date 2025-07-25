@@ -3,6 +3,7 @@ const colors = require('colors');
 const { Parser } = require('json2csv');
 const InventoryLog = require('../models/inventoryLog.model');
 const openai = require('../services/openai.service');
+const Order = require('../models/order.model');
 
 const getDashboardSummary = async (req, res) => {
     try {
