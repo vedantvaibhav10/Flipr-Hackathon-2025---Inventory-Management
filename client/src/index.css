@@ -1,0 +1,44 @@
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Import Tailwind's core styles */
+@import "tailwindcss";
+
+/* Define our custom theme */
+@layer base {
+  /* 1. Define CSS variables for our color palette */
+  :root {
+    --background: #0D1117;
+    --primary: #161B22;
+    --secondary: #21262D;
+    --accent: #58A6FF;
+    --text-primary: #C9D1D9;
+    --text-secondary: #8B949E;
+    --border: #30363D;
+    --success: #34D399;
+    --danger: #F87171;
+    --warning: #FBBF24;
+  }
+
+  /* 2. Apply base styles to the body */
+  body {
+    background-color: var(--background);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+/* 3. Create our own utility classes using the variables */
+@layer utilities {
+  .bg-background { background-color: var(--background); }
+  .bg-primary { background-color: var(--primary); }
+  .bg-secondary { background-color: var(--secondary); }
+  .bg-accent { background-color: var(--accent); }
+
+  .text-primary { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .text-accent { color: var(--accent); }
+
+  .border-primary { border-color: var(--border); }
+  .border-accent { border-color: var(--accent); }
+}
