@@ -185,9 +185,17 @@ const logoutUser = async (req, res) => {
     }
 }
 
+const getMe = async (req, res) => {
+    res.status(200).json({
+        success: true,
+        user: req.user
+    });
+};
+
 module.exports = {
     registerUser,
     verifyOtp,
     loginUser,
-    logoutUser
+    logoutUser,
+    getMe
 };
