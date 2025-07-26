@@ -6,9 +6,6 @@ const upload = require('../middleware/multer.middleware');
 
 const router = Router();
 
-router.post('/sync', protect, authorize('Admin'), createProduct);
-router.put('/:id/sync', protect, authorize('Admin'), updateProduct);
-
 router.get('/', protect, authorize('Admin', 'Staff'), getAllProducts);
 router.post('/', protect, authorize('Admin'), upload.single('image'), createProduct);
 router.put('/:id', protect, authorize('Admin'), upload.single('image'), updateProduct);

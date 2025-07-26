@@ -10,8 +10,6 @@ const authorize = require('../middleware/role.middleware');
 
 const router = Router();
 
-router.post('/sync', protect, authorize('Admin', 'Staff'), createOrder);
-
 router.route('/')
     .post(protect, authorize('Admin', 'Staff'), createOrder)
     .get(protect, authorize('Admin', 'Staff'), getOrders);

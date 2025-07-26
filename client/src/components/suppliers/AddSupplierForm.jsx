@@ -28,7 +28,7 @@ const AddSupplierForm = ({ onSupplierAdded, onClose }) => {
                 toast.success('Offline: Supplier saved locally, will sync later.');
                 const offlineId = `offline_${Date.now()}`;
                 await db.suppliers.add({ ...formData, _id: offlineId });
-                await addToOutbox({ url: '/suppliers', method: 'post', data: formData });
+                await addToOutbox({ url: '/suppliers/sync', method: 'post', data: formData });
                 onClose();
             } else {
                 setError(err.response?.data?.message || 'Failed to add supplier.');

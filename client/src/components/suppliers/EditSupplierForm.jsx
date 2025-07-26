@@ -31,7 +31,7 @@ const EditSupplierForm = ({ supplier, onSupplierUpdated, onClose }) => {
         setLoading(true);
         setError('');
         try {
-            const response = await apiClient.put(`/suppliers/${supplier._id}`, formData);
+            await apiClient.put(`/suppliers/${supplier._id}`, formData);
             toast.success('Supplier updated successfully!');
             onSupplierUpdated();
             onClose();
@@ -39,17 +39,10 @@ const EditSupplierForm = ({ supplier, onSupplierUpdated, onClose }) => {
             if (!err.response) {
                 toast.success('Offline: Supplier update saved locally, will sync later.');
                 await db.suppliers.update(supplier._id, formData);
-                await addToOutbox({
-                    url: `/suppliers/${supplier._id}`,
-                    method: 'put',
-                    data: formData,
-                });
-                onSupplierUpdated();
+                await addToOutbox({ url: `/suppliers/${supplier._id}/sync`, method: 'put', data: formData });
                 onClose();
             } else {
-                const errorMessage = err.response?.data?.message || 'Failed to update supplier.';
-                setError(errorMessage);
-                toast.error(errorMessage);
+                setError(err.response?.data?.message || 'Failed to update supplier.');
             }
         } finally {
             setLoading(false);

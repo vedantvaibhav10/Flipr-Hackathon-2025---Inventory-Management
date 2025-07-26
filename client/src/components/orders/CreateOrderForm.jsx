@@ -21,6 +21,7 @@ const CreateOrderForm = ({ onOrderCreated, onClose }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // For offline, try to get data from local DB first
                 const [localProducts, localSuppliers] = await Promise.all([
                     db.products.toArray(),
                     db.suppliers.toArray()
@@ -57,12 +58,12 @@ const CreateOrderForm = ({ onOrderCreated, onClose }) => {
         };
 
         try {
-            const response = await apiClient.post('/orders', orderPayload);
+            await apiClient.post('/orders', orderPayload);
             toast.success('Order created successfully!');
             onOrderCreated();
             onClose();
         } catch (err) {
-            if (!err.response) {
+            if (!err.response) { // Offline
                 toast.success('Offline: Order saved locally, will sync later.');
                 const offlineId = `offline_${Date.now()}`;
 
@@ -75,7 +76,7 @@ const CreateOrderForm = ({ onOrderCreated, onClose }) => {
                 };
 
                 await db.orders.add(offlineOrder);
-                await addToOutbox({ url: '/orders', method: 'post', data: orderPayload });
+                await addToOutbox({ url: '/orders/sync', method: 'post', data: orderPayload });
 
                 onClose();
             } else {
