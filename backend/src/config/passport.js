@@ -3,26 +3,23 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const GitHubStrategy = require('passport-github2').Strategy;
 const User = require('../models/user.model');
 
+const backendUrl = process.env.BACKEND_URL || 'https://inventory-management-backend-j0w6.onrender.com';
+
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/api/v1/auth/google/callback",
-    proxy: true
+    callbackURL: `${backendUrl}/api/v1/auth/google/callback`
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
             let user = await User.findOne({ googleId: profile.id });
-            if (user) {
-                return done(null, user);
-            }
-
+            if (user) return done(null, user);
             user = await User.findOne({ email: profile.emails[0].value });
             if (user) {
                 user.googleId = profile.id;
                 await user.save();
                 return done(null, user);
             }
-
             const newUser = await User.create({
                 googleId: profile.id,
                 name: profile.displayName,
@@ -38,17 +35,13 @@ passport.use(new GoogleStrategy({
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: "/api/v1/auth/github/callback",
-    scope: ['user:email'],
-    proxy: true
+    callbackURL: `${backendUrl}/api/v1/auth/github/callback`,
+    scope: ['user:email']
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
             let user = await User.findOne({ githubId: profile.id });
-            if (user) {
-                return done(null, user);
-            }
-
+            if (user) return done(null, user);
             const email = profile.emails && profile.emails[0].value;
             if (email) {
                 user = await User.findOne({ email });
@@ -58,7 +51,6 @@ passport.use(new GitHubStrategy({
                     return done(null, user);
                 }
             }
-
             const newUser = await User.create({
                 githubId: profile.id,
                 name: profile.displayName || profile.username,
@@ -78,3 +70,4 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((id, done) => {
     User.findById(id, (err, user) => done(err, user));
 });
+
