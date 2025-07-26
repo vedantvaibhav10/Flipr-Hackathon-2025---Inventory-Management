@@ -3,12 +3,10 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const GitHubStrategy = require('passport-github2').Strategy;
 const User = require('../models/user.model');
 
-const backendUrl = process.env.BACKEND_URL || 'https://inventory-management-backend-j0w6.onrender.com';
-
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: `${backendUrl}/api/v1/auth/google/callback`
+    callbackURL: "https://inventory-management-backend-j0w6.onrender.com/api/v1/auth/google/callback",
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
@@ -35,7 +33,7 @@ passport.use(new GoogleStrategy({
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: `${backendUrl}/api/v1/auth/github/callback`,
+    callbackURL: "https://inventory-management-backend-j0w6.onrender.com/api/v1/auth/github/callback",
     scope: ['user:email']
 },
     async (accessToken, refreshToken, profile, done) => {
@@ -70,4 +68,3 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((id, done) => {
     User.findById(id, (err, user) => done(err, user));
 });
-
