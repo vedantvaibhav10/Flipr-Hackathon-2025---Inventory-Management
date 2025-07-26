@@ -46,7 +46,7 @@ const HealthStatusBar = () => {
 
     useEffect(() => {
         runAllChecks();
-        const intervalId = setInterval(runAllChecks, 30000);
+        const intervalId = setInterval(runAllChecks, 10000);
         return () => clearInterval(intervalId);
     }, [runAllChecks]);
 
