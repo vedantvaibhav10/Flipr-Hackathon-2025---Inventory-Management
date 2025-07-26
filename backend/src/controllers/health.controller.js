@@ -8,7 +8,9 @@ const measurePromise = async (promise) => {
         await promise;
         return { status: 'ok', duration: Date.now() - startTime };
     } catch (error) {
-        return { status: 'error', duration: Date.now() - startTime, message: error.message };
+        console.error('Caught an error in measurePromise:'.bgRed, error);
+        const errorMessage = error.message || JSON.stringify(error) || 'An unknown error occurred';
+        return { status: 'error', duration: Date.now() - startTime, message: errorMessage };
     }
 };
 
@@ -47,9 +49,7 @@ const checkHealth = async (req, res) => {
     }
 
     const statusCode = isHealthy ? 200 : 503;
-
     console.log(`Health check performed. Status: ${isHealthy ? 'OK'.green : 'ERROR'.red}`);
-
     return res.status(statusCode).json({
         success: isHealthy,
         overall: overallStatus,
