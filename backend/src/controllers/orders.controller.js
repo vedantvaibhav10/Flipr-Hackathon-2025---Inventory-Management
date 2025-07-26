@@ -1,14 +1,34 @@
 const Order = require('../models/order.model');
+// FIX: Add missing model imports for Product and InventoryLog
+const Product = require('../models/product.model');
+const InventoryLog = require('../models/inventoryLog.model');
 
 const createOrder = async (req, res) => {
     try {
-        const { product, supplier, quantity, orderValue, status, expectedDelivery } = req.body;
-        if (!product || !quantity || !orderValue) {
-            return res.status(400).json({ success: false, message: 'Product, quantity, and order value are required.' });
+        const { product: productId, supplier, quantity, status, expectedDelivery } = req.body;
+
+        if (!productId || !quantity) {
+            return res.status(400).json({ success: false, message: 'Product and quantity are required.' });
         }
-        const order = await Order.create({ product, supplier, quantity, orderValue, status, expectedDelivery });
-        res.status(201).json({ success: true, data: order });
+
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found.' });
+        }
+
+        // FIX: Calculate orderValue on the backend for security and accuracy.
+        const orderValue = product.buyingPrice * Number(quantity);
+
+        const order = await Order.create({ product: productId, supplier, quantity, orderValue, status, expectedDelivery });
+
+        // Populate the new order with details before sending back
+        const populatedOrder = await Order.findById(order._id)
+            .populate('product', 'name sku')
+            .populate('supplier', 'name');
+
+        res.status(201).json({ success: true, data: populatedOrder });
     } catch (error) {
+        console.error(`Error creating order: ${error.message}`.red);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -20,6 +40,7 @@ const getOrders = async (req, res) => {
             .populate('supplier', 'name');
         res.status(200).json({ success: true, count: orders.length, data: orders });
     } catch (error) {
+        console.error(`Error fetching orders: ${error.message}`.red);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
@@ -34,7 +55,8 @@ const updateOrder = async (req, res) => {
         const oldStatus = order.status;
         const newStatus = req.body.status;
 
-        Object.assign(order, req.body);
+        order.status = newStatus || order.status;
+
         const updatedOrder = await order.save();
 
         if (newStatus === 'Delivered' && oldStatus !== 'Delivered') {
@@ -48,14 +70,19 @@ const updateOrder = async (req, res) => {
                     user: req.user._id,
                     actionType: 'RESTOCK',
                     quantityChange: order.quantity,
-                    notes: `From order ID: ${order._id}`
+                    newStockLevel: product.stockLevel,
+                    notes: `Restock from order ID: ${order._id}`
                 });
             }
         }
 
-        res.status(200).json({ success: true, data: updatedOrder });
+        const populatedOrder = await Order.findById(updatedOrder._id)
+            .populate('product', 'name sku')
+            .populate('supplier', 'name');
+
+        res.status(200).json({ success: true, data: populatedOrder });
     } catch (error) {
-        console.error(`Error updating order: ${error.message}`);
+        console.error(`Error updating order: ${error.message}`.red);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
