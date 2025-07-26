@@ -17,9 +17,13 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
     });
     const [imageFile, setImageFile] = useState(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
+
     const [adjustmentData, setAdjustmentData] = useState({
-        quantity: '', actionType: 'RESTOCK', notes: ''
+        quantity: '',
+        actionType: 'RESTOCK',
+        notes: ''
     });
+
     const [adjustmentLoading, setAdjustmentLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -59,16 +63,21 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
         e.preventDefault();
         setDetailsLoading(true);
         setError('');
+
         const productData = new FormData();
         Object.keys(detailsData).forEach(key => productData.append(key, detailsData[key]));
         if (imageFile) productData.append('image', imageFile);
 
         try {
-            const response = await apiClient.put(`/products/${product._id}`, productData);
+            const response = await apiClient.put(`/products/${product._id}`, productData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
             toast.success('Product details updated!');
             onProductUpdated(response.data.data);
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to update details.');
+            const errorMessage = err.response?.data?.message || 'Failed to update details.';
+            setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setDetailsLoading(false);
         }
@@ -76,21 +85,29 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
 
     const handleStockAdjustment = async (e) => {
         e.preventDefault();
+        const qty = Number(adjustmentData.quantity);
+        if (!qty || qty <= 0 || isNaN(qty)) {
+            return setError('Please enter a valid, positive quantity.');
+        }
         setAdjustmentLoading(true);
         setError('');
+
         const payload = {
             productId: product._id,
-            quantity: Number(adjustmentData.quantity),
+            quantity: qty,
             actionType: adjustmentData.actionType,
             notes: adjustmentData.notes
         };
+
         try {
             const response = await apiClient.post(`/inventory/update`, payload);
             toast.success('Stock adjusted successfully!');
             onProductUpdated(response.data.data);
             setAdjustmentData({ quantity: '', actionType: 'RESTOCK', notes: '' });
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to adjust stock.');
+            const errorMessage = err.response?.data?.message || 'Failed to adjust stock.';
+            setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setAdjustmentLoading(false);
         }
@@ -99,6 +116,7 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
     return (
         <div className="space-y-6">
             {error && <p className="text-sm text-danger text-center p-2 bg-danger/10 rounded-md">{error}</p>}
+
             <form onSubmit={handleDetailsSubmit} className="space-y-4">
                 <h3 className="text-lg font-semibold text-text-primary border-b border-border pb-2 flex items-center gap-2"><Edit size={20} /> Edit Product Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5 p-1">
@@ -122,6 +140,55 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
                 <div>
                     <label htmlFor="edit-description" className="form-label">Description</label>
                     <textarea id="edit-description" name="description" value={detailsData.description} onChange={handleDetailsChange} rows="3" className="input-field"></textarea>
+                </div>
+                <div className="pt-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Update Image (Optional)</label>
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-border border-dashed rounded-md">
+                        <div className="space-y-1 text-center">
+                            <Upload className="mx-auto h-12 w-12 text-text-secondary" />
+                            <div className="flex text-sm text-text-secondary">
+                                <label htmlFor="edit-image" className="relative cursor-pointer bg-secondary rounded-md font-medium text-accent hover:text-accent/80 p-1">
+                                    <span>Upload a file</span>
+                                    <input id="edit-image" name="image" type="file" className="sr-only" onChange={handleFileChange} />
+                                </label>
+                            </div>
+                            <p className="text-xs text-text-secondary">{imageFile ? imageFile.name : 'PNG, JPG up to 10MB'}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex justify-end pt-2">
+                    <button type="submit" disabled={detailsLoading} className="px-4 py-2 bg-accent text-white font-semibold rounded-lg flex items-center justify-center w-36">
+                        {detailsLoading ? <Loader2 className="animate-spin" /> : 'Save Details'}
+                    </button>
+                </div>
+            </form>
+
+            <form onSubmit={handleStockAdjustment} className="space-y-4 pt-4 border-t border-border">
+                <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2"><PackageMinus size={20} /> Manual Stock Adjustment</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5 p-1">
+                    <div>
+                        <label htmlFor="actionType" className="form-label">Reason / Action</label>
+                        <select
+                            id="actionType"
+                            name="actionType"
+                            value={adjustmentData.actionType}
+                            onChange={handleAdjustmentChange}
+                            className="select-field"
+                            required
+                        >
+                            <option value="RESTOCK">Restock (+)</option>
+                            <option value="RETURN">Customer Return (+)</option>
+                            <option value="SALE">Manual Sale (-)</option>
+                            <option value="DAMAGE">Damaged Goods (-)</option>
+                        </select>
+                    </div>
+                    <FormField label="Quantity" id="quantity" name="quantity" type="number" value={adjustmentData.quantity} onChange={handleAdjustmentChange} placeholder="e.g., 10" required />
+                </div>
+                <FormField label="Notes (Optional)" id="notes" name="notes" value={adjustmentData.notes} onChange={handleAdjustmentChange} placeholder="e.g., Warehouse transfer" />
+                <div className="flex justify-end pt-2">
+                    <button type="submit" disabled={adjustmentLoading} className="px-4 py-2 bg-secondary text-white font-semibold rounded-lg border border-border flex items-center justify-center w-36">
+                        {adjustmentLoading ? <Loader2 className="animate-spin" /> : 'Adjust Stock'}
+                    </button>
                 </div>
             </form>
         </div>
