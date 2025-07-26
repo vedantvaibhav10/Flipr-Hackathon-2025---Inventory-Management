@@ -58,8 +58,10 @@ const updateStock = async (req, res) => {
         await InventoryLog.create({
             product: productId,
             user: userId,
-            actionType: actionType,
-            quantityChange: quantityChangeValue,
+            actionType,
+            quantityChangeValue,
+            newStockLevel: product.stockLevel,
+            notes: notes || ''
         });
 
         if (product.stockLevel < product.threshold) {

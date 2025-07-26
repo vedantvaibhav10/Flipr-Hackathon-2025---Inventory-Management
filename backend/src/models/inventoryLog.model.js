@@ -20,6 +20,10 @@ const inventoryLogSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    newStockLevel: {
+        type: Number,
+        required: true,
+    },
     notes: {
         type: String,
         trim: true,
