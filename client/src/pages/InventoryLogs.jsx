@@ -3,7 +3,6 @@ import apiClient from '../api';
 import { motion } from 'framer-motion';
 import { Loader2, Calendar, User, ChevronsUpDown } from 'lucide-react';
 
-// Helper to format date for display
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('en-US', {
         year: 'numeric',
@@ -14,7 +13,6 @@ const formatDate = (dateString) => {
     });
 };
 
-// Helper to determine color and label for action types
 const getActionStyle = (action) => {
     switch (action) {
         case 'SALE':
@@ -36,14 +34,11 @@ const InventoryLogs = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // You can add state for filters later, e.g.,
-    // const [filters, setFilters] = useState({ dateRange: null, actionType: '', userId: '' });
 
     useEffect(() => {
         const fetchLogs = async () => {
             try {
                 setLoading(true);
-                // This endpoint will need to be created on your backend
                 const response = await apiClient.get('/logs');
                 setLogs(response.data.data);
             } catch (err) {
@@ -54,7 +49,7 @@ const InventoryLogs = () => {
             }
         };
         fetchLogs();
-    }, []); // Later, you'll add 'filters' to this dependency array
+    }, []);
 
     if (loading) {
         return <div className="flex justify-center mt-10"><Loader2 className="animate-spin h-8 w-8 text-accent" /></div>;
@@ -68,7 +63,6 @@ const InventoryLogs = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="text-3xl font-bold text-text-primary mb-6">Inventory Movement Logs</h1>
 
-            {/* TODO: Add filter controls here (Date pickers, dropdowns for action/user) */}
 
             <div className="bg-primary rounded-lg border border-border overflow-hidden">
                 <div className="overflow-x-auto">

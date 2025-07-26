@@ -1,207 +1,401 @@
-# Inventory Management System - API Documentation
+# InvTrack - AI-Powered Inventory Management Backend
 
-Welcome to the backend API for the Inventory Management System. This document provides a comprehensive guide to setting up the project, understanding its architecture, and using every available endpoint.
+[![Node.js](https://img.shields.io/badge/Node.js-v14+-green.svg)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.x-blue.svg)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-5.x-green.svg)](https://www.mongodb.com/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-This powerful and secure RESTful API is built with Node.js, Express, and MongoDB. It includes role-based access control, automated email alerts, advanced data reporting, and intelligent features powered by AI.
+A powerful and secure RESTful API built with Node.js, Express, and MongoDB. Features role-based access control, automated email alerts, advanced data reporting, and intelligent features powered by OpenAI.
 
-**Deployed Link:** [https://inventory-management-backend-gmik.onrender.com](https://inventory-management-backend-gmik.onrender.com)
+## 🚀 Live Demo
 
-## Table of Contents
-1.  [Project Setup](#project-setup)
-2.  [API Endpoints](#api-endpoints)
-    -   [Health Check](#health-check)
-    -   [Authentication](#authentication)
-    -   [Products](#products)
-    -   [Suppliers](#suppliers)
-    -   [Orders](#orders)
-    -   [Inventory](#inventory)
-    -   [Reports](#reports)
-    -   [AI Features](#ai-features)
-3.  [Admin User Creation](#admin-user-creation)
+**Deployed API:** [https://inventory-management-backend-gmik.onrender.com](https://inventory-management-backend-gmik.onrender.com)
 
----
+## ✨ Features
 
-## 1. Project Setup
+- 🔐 **Role-based Authentication** - JWT-based auth with Admin/Staff roles
+- 🤖 **AI-Powered Insights** - Smart descriptions, category suggestions, and reorder recommendations
+- 📧 **Automated Alerts** - Email notifications for low stock and critical events
+- 📊 **Advanced Reporting** - Comprehensive analytics and data export
+- 🔍 **Global Search** - Search across products and suppliers
+- 📱 **RESTful API** - Clean, documented endpoints
+- ☁️ **Cloud Storage** - Cloudinary integration for image management
+- 🔒 **Secure** - Input validation, sanitization, and security headers
 
-Follow these steps to get the backend server running on your local machine.
+## 🏗️ Architecture
 
-### Prerequisites
--   Node.js (v14 or higher)
--   npm & MongoDB
--   An email account for sending alerts (e.g., Mailtrap)
--   A Cloudinary account for image storage
--   An OpenAI account for AI features
-
-### Installation
-1.  Clone the repository:
-    ```bash
-    git clone <your-repository-url>
-    cd inventory-management-backend
-    ```
-2.  Install the required npm packages:
-    ```bash
-    npm install
-    ```
-
-### Environment Variables
-Create a file named `.env` in the root directory and add the following variables.
-
-```dotenv
-# Server Configuration
-PORT=5000
-NODE_ENV=development
-
-# MongoDB Connection
-MONGO_URI=your_mongodb_connection_string
-
-# JWT Authentication
-JWT_SECRET=your_super_secret_string_for_jwt
-JWT_EXPIRES_IN=1d
-JWT_COOKIE_EXPIRES=1 # In days
-
-# Nodemailer (for sending emails)
-MAIL_HOST=smtp.mailtrap.io
-MAIL_PORT=2525
-MAIL_USER=your_mailtrap_user
-MAIL_PASS=your_mailtrap_password
-MAIL_FROM=noreply@invtrack.com
-ADMIN_EMAIL=your_admin_email_for_alerts@example.com
-
-# Cloudinary (for image storage)
-CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-
-# OpenAI (for AI features)
-OPENAI_API_KEY=your_openai_api_key
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Client App    │◄──►│   Express API    │◄──►│    MongoDB      │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                              │
+                              ▼
+                       ┌──────────────────┐
+                       │  External APIs   │
+                       │  • OpenAI        │
+                       │  • Cloudinary    │
+                       │  • Nodemailer    │
+                       └──────────────────┘
 ```
 
-### Running the Server
--   Development mode: `npm run dev`
--   Production mode: `npm run start`
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+- MongoDB instance
+- Email service (Mailtrap recommended for development)
+- Cloudinary account
+- OpenAI API key
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repository-url>
+   cd inventory-management-backend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   
+   Create a `.env` file in the root directory:
+   ```env
+   # Server Configuration
+   PORT=5000
+   NODE_ENV=development
+
+   # Database
+   MONGODB_URL=your_mongodb_connection_string
+
+   # JWT Authentication
+   JWT_SECRET=your_super_secret_string_for_jwt
+   JWT_EXPIRES_IN=1d
+   JWT_COOKIE_EXPIRES=1
+
+   # Email Configuration
+   MAIL_HOST=smtp.mailtrap.io
+   MAIL_PORT=2525
+   MAIL_USER=your_mailtrap_user
+   MAIL_PASS=your_mailtrap_password
+   MAIL_FROM=noreply@invtrack.com
+   ADMIN_EMAIL=your_admin_email@example.com
+
+   # Cloudinary (Image Storage)
+   CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+   CLOUDINARY_API_KEY=your_cloudinary_api_key
+   CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+   # OpenAI (AI Features)
+   OPENAI_API_KEY=your_openai_api_key
+   ```
+
+4. **Start the server**
+   ```bash
+   # Development mode with auto-restart
+   npm run dev
+   
+   # Production mode
+   npm start
+   ```
+
+The server will start on `http://localhost:5000`
+
+## 📚 API Documentation
+
+### Base URL
+All endpoints are prefixed with `/api/v1`
+
+### Authentication
+The API uses JWT tokens stored in HTTP-only cookies. Include credentials in your requests.
+
+### Roles
+- **Admin**: Full access to all endpoints
+- **Staff**: Limited access to read operations and basic inventory management
 
 ---
 
-## 2. API Endpoints
-
-All routes are prefixed with `/api/v1`.
+## 🔗 API Endpoints
 
 ### Health Check
-
-#### `GET /health`
--   **Description:** Checks the health of the server, database, and Cloudinary.
--   **Roles:** Public
+```http
+GET /health
+```
+Check server, database, and Cloudinary connectivity status.
 
 ### Authentication
 
-#### `POST /api/v1/auth/register`
--   **Description:** Registers a new user as 'Staff'.
--   **Body:** `{ "name": "...", "email": "...", "password": "..." }`
+#### Register User
+```http
+POST /auth/register
+Content-Type: application/json
 
-#### `POST /api/v1/auth/verify-otp`
--   **Description:** Verifies the user's email with the OTP.
--   **Body:** `{ "email": "...", "otp": "..." }`
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
 
-#### `POST /api/v1/auth/login`
--   **Description:** Logs in a verified user.
--   **Body:** `{ "email": "...", "password": "..." }`
+#### Verify Email
+```http
+POST /auth/verify-otp
+Content-Type: application/json
 
-#### `POST /api/v1/auth/logout`
--   **Description:** Logs out the current user.
--   **Roles:** Admin, Staff
+{
+  "email": "john@example.com",
+  "otp": "123456"
+}
+```
+
+#### Login
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
+
+#### Logout
+```http
+POST /auth/logout
+```
+
+#### Get Current User
+```http
+GET /auth/me
+```
+
+### Global Search
+```http
+GET /search?q=search_term
+```
 
 ### Products
 
-#### `POST /api/v1/products`
--   **Description:** Creates a new product.
--   **Roles:** Admin
--   **Body:** `multipart/form-data` with fields: `name`, `sku`, `category`, `buyingPrice`, `sellingPrice`, `stockLevel`, `threshold`, `expiryDate` (optional), `image` (optional file).
+#### Create Product
+```http
+POST /products
+Content-Type: multipart/form-data
 
-#### `GET /api/v1/products`
--   **Description:** Retrieves all products.
--   **Roles:** Admin, Staff
+name: Product Name
+sku: SKU123
+category: Electronics
+description: Product description (optional)
+buyingPrice: 100
+sellingPrice: 150
+stockLevel: 50
+threshold: 10
+expiryDate: 2024-12-31 (optional)
+image: [file] (optional)
+```
 
-#### `PUT /api/v1/products/:id`
--   **Description:** Updates a product.
--   **Roles:** Admin
+#### Get All Products
+```http
+GET /products
+```
 
-#### `DELETE /api/v1/products/:id`
--   **Description:** Deletes a product.
--   **Roles:** Admin
+#### Update Product
+```http
+PUT /products/:id
+Content-Type: multipart/form-data
+```
+
+#### Delete Product
+```http
+DELETE /products/:id
+```
 
 ### Suppliers
 
-#### `POST /api/v1/suppliers`
--   **Description:** Creates a new supplier.
--   **Roles:** Admin
--   **Body:** `{ "name": "...", "contactNumber": "...", "email": "..." }`
+#### Create Supplier
+```http
+POST /suppliers
+Content-Type: application/json
 
-#### `GET /api/v1/suppliers`
--   **Description:** Retrieves all suppliers.
--   **Roles:** Admin, Staff
+{
+  "name": "Supplier Name",
+  "contactNumber": "+1234567890",
+  "email": "supplier@example.com"
+}
+```
+
+#### Get All Suppliers
+```http
+GET /suppliers
+```
+
+#### Update Supplier
+```http
+PUT /suppliers/:id
+```
+
+#### Delete Supplier
+```http
+DELETE /suppliers/:id
+```
 
 ### Orders
 
-#### `POST /api/v1/orders`
--   **Description:** Creates a new purchase order.
--   **Roles:** Admin, Staff
--   **Body:** `{ "product": "...", "supplier": "...", "quantity": ..., "orderValue": ..., "status": "...", "expectedDelivery": "..." }`
+#### Create Order
+```http
+POST /orders
+Content-Type: application/json
 
-#### `PUT /api/v1/orders/:id`
--   **Description:** Updates an order. If status becomes 'Delivered', product stock is automatically increased.
--   **Roles:** Admin, Staff
--   **Body:** `{ "status": "Delivered" }`
+{
+  "product": "product_id",
+  "supplier": "supplier_id",
+  "quantity": 100,
+  "expectedDelivery": "2024-01-15"
+}
+```
+
+#### Get All Orders
+```http
+GET /orders
+```
+
+#### Update Order Status
+```http
+PUT /orders/:id
+Content-Type: application/json
+
+{
+  "status": "Delivered"
+}
+```
+*Status options: "Shipped", "Delivered", "Cancelled", "Returned"*
+
+#### Delete Order
+```http
+DELETE /orders/:id
+```
 
 ### Inventory
 
-#### `POST /api/v1/inventory/update`
--   **Description:** Manually updates stock for sales, damages, etc. Triggers a **smart, AI-powered low-stock alert** if the threshold is crossed.
--   **Roles:** Admin, Staff
--   **Body:** `{ "productId": "...", "actionType": "SALE", "quantity": ... }`
+#### Update Stock
+```http
+POST /inventory/update
+Content-Type: application/json
 
-#### `GET /api/v1/inventory/logs`
--   **Description:** Retrieves all inventory logs.
--   **Roles:** Admin
+{
+  "productId": "product_id",
+  "actionType": "SALE",
+  "quantity": 5,
+  "notes": "Optional notes"
+}
+```
+*Action types: "SALE", "DAMAGE", "RESTOCK", "RETURN"*
+
+#### Get Inventory Logs
+```http
+GET /inventory/logs
+```
 
 ### Reports
 
-#### `GET /api/v1/reports/summary`
--   **Description:** Retrieves aggregated data for the main dashboard.
--   **Roles:** Admin
+#### Dashboard Summary
+```http
+GET /reports/summary
+```
 
-#### `GET /api/v1/reports/products/export`
--   **Description:** Downloads a CSV file of all products.
--   **Roles:** Admin
+#### Export Products
+```http
+GET /reports/products/export
+```
+*Returns CSV file download*
 
 ### AI Features
-Advanced endpoints powered by the OpenAI API.
 
-#### `POST /api/v1/products/generate-description`
--   **Description:** Generates a professional product description.
--   **Roles:** Admin
--   **Body:** `{ "name": "...", "category": "..." }`
+#### Generate Product Description
+```http
+POST /products/generate-description
+Content-Type: application/json
 
-#### `POST /api/v1/products/suggest-category`
--   **Description:** Suggests a category for a new product.
--   **Roles:** Admin
--   **Body:** `{ "name": "..." }`
+{
+  "name": "Product Name",
+  "category": "Electronics"
+}
+```
 
-#### `GET /api/v1/ai/reorder-suggestion/:productId`
--   **Description:** Generates a smart reorder suggestion for a low-stock product.
--   **Roles:** Admin
+#### Suggest Category
+```http
+POST /products/suggest-category
+Content-Type: application/json
 
-#### `GET /api/v1/ai/supplier-analysis/:supplierId`
--   **Description:** Generates a performance analysis of a supplier.
--   **Roles:** Admin
+{
+  "name": "Product Name"
+}
+```
 
-#### `GET /api/v1/ai/pricing-suggestion/:productId`
--   **Description:** Generates a suggestion for optimizing a product's selling price.
--   **Roles:** Admin
+#### Reorder Suggestion
+```http
+GET /ai/reorder-suggestion/:productId
+```
 
----
+#### Supplier Analysis
+```http
+GET /ai/supplier-analysis/:supplierId
+```
 
-## 3. Admin User Creation
-By default, all registered users have the 'Staff' role. To create an admin, manually update their role in the database.
-1.  Register a new user via the API.
-2.  Connect to your MongoDB database.
-3.  Run: `db.users.updateOne({ email: "your-admin-email@example.com" }, { $set: { role: "Admin" } })`
+#### Pricing Suggestion
+```http
+GET /ai/pricing-suggestion/:productId
+```
+
+## 👨‍💼 Admin User Setup
+
+By default, all registered users have the 'Staff' role. To create an admin:
+
+1. Register a user through the API
+2. Connect to your MongoDB database
+3. Update the user's role:
+   ```javascript
+   db.users.updateOne(
+     { email: "admin@example.com" }, 
+     { $set: { role: "Admin" } }
+   )
+   ```
+
+## 🧪 Testing
+
+Use tools like Postman, Insomnia, or curl to test the API endpoints. 
+
+### Example cURL Request
+```bash
+curl -X POST http://localhost:5000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password"}' \
+  -c cookies.txt
+
+curl -X GET http://localhost:5000/api/v1/products \
+  -b cookies.txt
+```
+
+## 🔧 Configuration
+
+### Environment Variables Reference
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `PORT` | Server port | No (default: 5000) |
+| `NODE_ENV` | Environment mode | No (default: development) |
+| `MONGODB_URL` | MongoDB connection string | Yes |
+| `JWT_SECRET` | JWT signing secret | Yes |
+| `JWT_EXPIRES_IN` | JWT expiration time | No (default: 1d) |
+| `MAIL_HOST` | SMTP host | Yes |
+| `MAIL_PORT` | SMTP port | Yes |
+| `MAIL_USER` | SMTP username | Yes |
+| `MAIL_PASS` | SMTP password | Yes |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | Yes |
+| `CLOUDINARY_API_KEY` | Cloudinary API key | Yes |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret | Yes |
+| `OPENAI_API_KEY` | OpenAI API key | Yes |

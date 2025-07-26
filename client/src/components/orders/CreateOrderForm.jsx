@@ -16,7 +16,6 @@ const CreateOrderForm = ({ onOrderCreated, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    // Fetch products and suppliers for the dropdowns
     useEffect(() => {
         const fetchData = async () => {
             try {

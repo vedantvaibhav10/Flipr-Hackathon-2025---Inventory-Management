@@ -5,5 +5,4 @@ const apiClient = axios.create({
     withCredentials: true,
 });
 
-// Use "export default" here
 export default apiClient;

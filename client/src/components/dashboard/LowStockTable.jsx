@@ -36,7 +36,7 @@ const LowStockTable = () => {
             ) : (
                 <div className="space-y-4">
                     {lowStockProducts.length > 0 ? (
-                        lowStockProducts.slice(0, 5).map(product => ( // Show top 5
+                        lowStockProducts.slice(0, 5).map(product => (
                             <div key={product._id} className="flex items-center gap-4">
                                 <img src={product.image?.url || `https://placehold.co/40x40/21262D/C9D1D9?text=${product.name.charAt(0)}`} alt={product.name} className="w-10 h-10 rounded-md object-cover" />
                                 <div className="flex-1">

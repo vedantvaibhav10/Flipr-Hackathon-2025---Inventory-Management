@@ -9,10 +9,8 @@ const globalSearch = async (req, res) => {
             return res.status(200).json({ success: true, data: { products: [], suppliers: [] } });
         }
 
-        // A case-insensitive regular expression to find matches
         const regex = new RegExp(query, 'i');
 
-        // Perform searches on different models in parallel for efficiency
         const [products, suppliers] = await Promise.all([
             Product.find({
                 $or: [{ name: regex }, { sku: regex }]

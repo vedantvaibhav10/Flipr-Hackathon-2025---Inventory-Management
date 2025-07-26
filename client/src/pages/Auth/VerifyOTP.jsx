@@ -12,7 +12,6 @@ const VerifyOTP = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Get the email from the navigation state passed from the Register page
     const email = location.state?.email;
 
     if (!email) {

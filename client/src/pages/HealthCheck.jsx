@@ -1,21 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import apiClient from '../api'; // Authenticated client for API endpoints
+import apiClient from '../api';
 import { motion } from 'framer-motion';
 import { Loader2, CheckCircle2, XCircle, Server, Database, Cloud, Link as LinkIcon } from 'lucide-react';
 
-// Public client for the /health endpoint
 const healthClient = axios.create({
     baseURL: 'https://inventory-management-backend-j0w6.onrender.com',
 });
 
-// List of critical API endpoints to monitor
 const apiEndpointsToMonitor = [
     { name: 'Get Current User (/auth/me)', method: 'get', path: '/auth/me' },
     { name: 'Get Products (/products)', method: 'get', path: '/products' },
     { name: 'Get Inventory Logs (/inventory/logs)', method: 'get', path: '/inventory/logs' },
     { name: 'Get Dashboard Summary (/reports/summary)', method: 'get', path: '/reports/summary' },
-    { name: 'Export Products (/reports/products/export)', method: 'get', path: '/reports/products/export' }, // <-- ADDED THIS LINE
+    { name: 'Export Products (/reports/products/export)', method: 'get', path: '/reports/products/export' },
 ];
 
 const HealthCheck = () => {
@@ -39,7 +37,6 @@ const HealthCheck = () => {
         const statusPromises = apiEndpointsToMonitor.map(async (endpoint) => {
             const startTime = Date.now();
             try {
-                // For export, we just need the headers, not the full blob
                 const config = endpoint.path.includes('export') ? { responseType: 'blob' } : {};
                 await apiClient[endpoint.method](endpoint.path, config);
                 return { name: endpoint.name, status: 'ok', responseTime: Date.now() - startTime };
@@ -59,8 +56,8 @@ const HealthCheck = () => {
 
 
     useEffect(() => {
-        runAllChecks(); // Initial check
-        const intervalId = setInterval(runAllChecks, 2000); // Re-check every 10 seconds
+        runAllChecks();
+        const intervalId = setInterval(runAllChecks, 2000);
         return () => clearInterval(intervalId);
     }, [runAllChecks]);
 

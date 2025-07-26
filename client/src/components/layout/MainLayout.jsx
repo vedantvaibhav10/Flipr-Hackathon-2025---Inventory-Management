@@ -1,6 +1,7 @@
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { Outlet } from 'react-router-dom';
+import HealthStatusBar from '../common/HealthStatusBar';
 
 const MainLayout = () => {
     return (
@@ -12,6 +13,7 @@ const MainLayout = () => {
                     <Outlet />
                 </main>
             </div>
+            <HealthStatusBar />
         </div>
     );
 };

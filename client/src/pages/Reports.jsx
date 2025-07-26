@@ -1,35 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import apiClient from '../api';
 import { motion } from 'framer-motion';
 import { Loader2, FileText, ArrowUpCircle, ArrowDownCircle, ArrowRightCircle, AlertCircle, RotateCcw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import ErrorDisplay from '../components/common/ErrorDisplay';
 
-// Helper to format date for display
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
     });
 };
 
-// Helper to get styled icons and labels for action types
 const getActionDetails = (action) => {
     switch (action) {
-        case 'RESTOCK':
-            return { text: 'Restock', color: 'text-green-400', icon: <ArrowUpCircle size={18} /> };
-        case 'SALE':
-            return { text: 'Sale', color: 'text-red-400', icon: <ArrowDownCircle size={18} /> };
-        case 'RETURN':
-            return { text: 'Return', color: 'text-blue-400', icon: <RotateCcw size={18} /> };
-        case 'DAMAGE':
-            return { text: 'Damage', color: 'text-yellow-400', icon: <AlertCircle size={18} /> };
-        case 'TRANSFER':
-            return { text: 'Transfer', color: 'text-purple-400', icon: <ArrowRightCircle size={18} /> };
-        default:
-            return { text: action, color: 'text-gray-400', icon: null };
+        case 'RESTOCK': return { text: 'Restock', color: 'text-green-400', icon: <ArrowUpCircle size={18} /> };
+        case 'SALE': return { text: 'Sale', color: 'text-red-400', icon: <ArrowDownCircle size={18} /> };
+        case 'RETURN': return { text: 'Return', color: 'text-blue-400', icon: <RotateCcw size={18} /> };
+        case 'DAMAGE': return { text: 'Damage', color: 'text-yellow-400', icon: <AlertCircle size={18} /> };
+        case 'TRANSFER': return { text: 'Transfer', color: 'text-purple-400', icon: <ArrowRightCircle size={18} /> };
+        default: return { text: action, color: 'text-gray-400', icon: null };
     }
 };
 
@@ -38,29 +28,30 @@ const Reports = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        const fetchInventoryLogs = async () => {
-            try {
-                setLoading(true);
-                // Fetch the detailed inventory logs
-                const response = await apiClient.get('/inventory/logs');
-                setLogs(response.data.data);
-            } catch (err) {
-                setError('Failed to fetch inventory logs.');
-                toast.error('Failed to fetch inventory logs.');
-            } finally {
-                setLoading(false);
+    const fetchInventoryLogs = useCallback(async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const response = await apiClient.get('/inventory/logs');
+            setLogs(response.data.data);
+        } catch (err) {
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                setError("You are not authorized to view reports.");
+            } else {
+                setError('Could not load report data. Please try again.');
             }
-        };
-        fetchInventoryLogs();
+        } finally {
+            setLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchInventoryLogs();
+    }, [fetchInventoryLogs]);
 
     const handleExport = async () => {
         try {
-            // This functionality remains the same, exporting the product list
-            const response = await apiClient.get('/reports/products/export', {
-                responseType: 'blob',
-            });
+            const response = await apiClient.get('/reports/products/export', { responseType: 'blob' });
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -70,10 +61,11 @@ const Reports = () => {
             link.remove();
             toast.success('Product data exported successfully!');
         } catch (err) {
-            console.error('Failed to export products', err);
             toast.error('Failed to export products.');
         }
     };
+
+    if (error) return <ErrorDisplay message={error} onRetry={fetchInventoryLogs} />;
 
     return (
         <motion.div
@@ -94,10 +86,9 @@ const Reports = () => {
                 </motion.button>
             </div>
 
-            {loading && <div className="flex justify-center mt-10"><Loader2 className="animate-spin h-8 w-8 text-accent" /></div>}
-            {error && <div className="text-center text-danger mt-10 p-4 bg-danger/10 rounded-md">{error}</div>}
-
-            {!loading && !error && (
+            {loading ? (
+                <div className="flex justify-center mt-10"><Loader2 className="animate-spin h-8 w-8 text-accent" /></div>
+            ) : (
                 <div>
                     <h2 className="text-xl font-semibold text-text-primary mb-4">Recent Inventory Movements</h2>
                     <div className="bg-primary rounded-lg border border-border overflow-hidden">
@@ -131,7 +122,7 @@ const Reports = () => {
                                                     {isAddition ? `+${log.quantityChange}` : log.quantityChange}
                                                 </td>
                                                 <td className="p-4 text-text-primary text-center">{log.newStockLevel}</td>
-                                                <td className="p-4 text-text-secondary">{log.user?.username || 'System'}</td>
+                                                <td className="p-4 text-text-secondary">{log.user?.name || 'System'}</td>
                                                 <td className="p-4 text-text-secondary">{formatDate(log.createdAt)}</td>
                                                 <td className="p-4 text-text-secondary italic">{log.notes || '-'}</td>
                                             </tr>

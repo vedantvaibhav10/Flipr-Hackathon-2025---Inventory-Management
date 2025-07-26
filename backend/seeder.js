@@ -1,98 +1,102 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const colors = require('colors');
+const bcrypt = require('bcrypt');
 const connectDB = require('./src/config/db');
 
 // Load Models
-const Product = require('./src/models/product.model');
 const User = require('./src/models/user.model');
+const Product = require('./src/models/product.model');
+const Supplier = require('./src/models/supplier.model');
+const Order = require('./src/models/order.model');
 const InventoryLog = require('./src/models/inventoryLog.model');
 
-// Load env variables
 dotenv.config();
-
-// Connect to Database
 connectDB();
 
-// Function to import data
-const seedLogs = async () => {
+const importData = async () => {
     try {
-        // Clear existing logs
+        // Clear all existing data
+        await User.deleteMany();
+        await Supplier.deleteMany();
+        await Product.deleteMany();
+        await Order.deleteMany();
         await InventoryLog.deleteMany();
 
-        const products = await Product.find();
-        const users = await User.find();
+        // --- Create Users ---
+        const salt = await bcrypt.genSalt(10);
+        const adminPassword = await bcrypt.hash('123456', salt);
+        const staffPassword = await bcrypt.hash('123456', salt);
 
-        if (products.length === 0 || users.length === 0) {
-            console.error('Error: Please create at least one product and one user before seeding logs.'.red.inverse);
-            process.exit();
-        }
+        const users = await User.insertMany([
+            { name: 'Admin User', email: 'admin@example.com', password: adminPassword, role: 'Admin', isVerified: true },
+            { name: 'Staff User', email: 'staff@example.com', password: staffPassword, role: 'Staff', isVerified: true },
+        ]);
+        const adminUser = users[0];
 
+        // --- Create Suppliers ---
+        const suppliers = await Supplier.insertMany([
+            { name: 'Global Tech Supplies', contactNumber: '111-222-3333', email: 'contact@gts.com' },
+            { name: 'Office Essentials Co.', contactNumber: '444-555-6666', email: 'sales@officeco.net' },
+            { name: 'Organic Foods Inc.', contactNumber: '777-888-9999', email: 'orders@organicfoods.com' },
+        ]);
+
+        // --- Create Products ---
+        const products = await Product.insertMany([
+            { name: 'Wireless Mouse', sku: 'WM-101', category: 'Electronics', stockLevel: 5, threshold: 10, buyingPrice: 15.50, sellingPrice: 29.99, supplier: suppliers[0]._id },
+            { name: 'Laptop Stand', sku: 'LS-202', category: 'Accessories', stockLevel: 30, threshold: 15, buyingPrice: 25.00, sellingPrice: 45.00, supplier: suppliers[0]._id },
+            { name: 'A4 Paper Ream', sku: 'AP-303', category: 'Stationery', stockLevel: 150, threshold: 50, buyingPrice: 5.00, sellingPrice: 9.50, supplier: suppliers[1]._id },
+            { name: 'Organic Coffee Beans', sku: 'OCB-404', category: 'Groceries', stockLevel: 8, threshold: 20, buyingPrice: 12.00, sellingPrice: 22.99, supplier: suppliers[2]._id },
+            { name: 'Mechanical Keyboard', sku: 'MK-505', category: 'Electronics', stockLevel: 25, threshold: 10, buyingPrice: 80.00, sellingPrice: 139.99, supplier: suppliers[0]._id },
+        ]);
+
+        // --- Create Orders ---
+        const orders = await Order.insertMany([
+            { product: products[0]._id, supplier: suppliers[0]._id, quantity: 50, orderValue: 775, status: 'Delivered' },
+            { product: products[1]._id, supplier: suppliers[0]._id, quantity: 30, orderValue: 750, status: 'Shipped' },
+            { product: products[3]._id, supplier: suppliers[2]._id, quantity: 25, orderValue: 300, status: 'Ordered' },
+            { product: products[2]._id, supplier: suppliers[1]._id, quantity: 100, orderValue: 500, status: 'Cancelled' },
+            { product: products[0]._id, supplier: suppliers[0]._id, quantity: 20, orderValue: 310, status: 'Delivered' },
+        ]);
+
+        // --- Create Inventory Logs ---
         const logs = [];
-        const actionTypes = ['RESTOCK', 'SALE', 'RETURN', 'DAMAGE', 'TRANSFER'];
-        const notesPool = [
-            'Manual count adjustment',
-            'Order #ORD-1234 fulfilled',
-            'Stock received from Main Supplier',
-            'Expired items removed from shelf',
-            'Customer return, item unopened',
-            'Transfer to Warehouse B',
-            'Promotional sale event item'
-        ];
-
-        // Create 50 random log entries
-        for (let i = 0; i < 50; i++) {
-            const randomProduct = products[Math.floor(Math.random() * products.length)];
-            const randomUser = users[Math.floor(Math.random() * users.length)];
-            const randomAction = actionTypes[Math.floor(Math.random() * actionTypes.length)];
-            const randomNote = notesPool[Math.floor(Math.random() * notesPool.length)];
-
-            let quantityChange;
-            if (['SALE', 'DAMAGE'].includes(randomAction)) {
-                quantityChange = -Math.floor(Math.random() * 20 + 1); // e.g., -1 to -20
-            } else {
-                quantityChange = Math.floor(Math.random() * 50 + 5); // e.g., 5 to 55
+        for (const product of products) {
+            // Initial stock log
+            logs.push({ product: product._id, user: adminUser._id, actionType: 'RESTOCK', quantityChange: product.stockLevel, newStockLevel: product.stockLevel, notes: 'Initial stock count' });
+            // Simulate some sales
+            for (let i = 0; i < 5; i++) {
+                const saleQty = Math.floor(Math.random() * 5) + 1;
+                logs.push({ product: product._id, user: adminUser._id, actionType: 'SALE', quantityChange: -saleQty, newStockLevel: product.stockLevel - saleQty, notes: `Fulfilled order #${Math.floor(Math.random() * 1000)}` });
             }
-
-            logs.push({
-                product: randomProduct._id,
-                user: randomUser._id,
-                actionType: randomAction,
-                quantityChange: quantityChange,
-                // For seeding, a random new stock level is sufficient to test display
-                newStockLevel: Math.floor(Math.random() * 100 + 20),
-                notes: randomNote,
-                // Create log at a random time in the last 30 days
-                createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
-            });
         }
-
         await InventoryLog.insertMany(logs);
 
-        console.log('✅ Inventory logs seeded successfully!'.green.inverse);
+        console.log('✅✅✅ Data Imported Successfully! ✅✅✅'.green.inverse);
         process.exit();
-
-    } catch (err) {
-        console.error(`${err}`.red.inverse);
+    } catch (error) {
+        console.error(`Error: ${error.message}`.red.inverse);
         process.exit(1);
     }
 }
 
-// Function to destroy data
 const destroyData = async () => {
     try {
+        await User.deleteMany();
+        await Supplier.deleteMany();
+        await Product.deleteMany();
+        await Order.deleteMany();
         await InventoryLog.deleteMany();
-        console.log('🔥 Inventory logs destroyed successfully!'.red.inverse);
+        console.log('🔥🔥🔥 Data Destroyed Successfully! 🔥🔥🔥'.red.inverse);
         process.exit();
-    } catch (err) {
-        console.error(`${err}`.red.inverse);
+    } catch (error) {
+        console.error(`Error: ${error.message}`.red.inverse);
         process.exit(1);
     }
 }
 
-// Command line argument logic
 if (process.argv[2] === '-i') {
-    seedLogs();
+    importData();
 } else if (process.argv[2] === '-d') {
     destroyData();
 } else {

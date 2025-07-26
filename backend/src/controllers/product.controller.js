@@ -5,9 +5,7 @@ const openai = require('../services/openai.service');
 
 const createProduct = async (req, res) => {
     try {
-        console.log('Received body for create:', req.body);
-
-        const { name, sku, category, stockLevel, threshold, buyingPrice, sellingPrice, expiryDate } = req.body;
+        const { name, sku, description, category, stockLevel, threshold, buyingPrice, sellingPrice, expiryDate } = req.body;
 
         if (!name || !sku || !category || !buyingPrice || !sellingPrice) {
             return res.status(400).json({
@@ -19,6 +17,7 @@ const createProduct = async (req, res) => {
         const productData = {
             name,
             sku,
+            description,
             category,
             stockLevel,
             threshold,
@@ -29,16 +28,12 @@ const createProduct = async (req, res) => {
 
         if (req.file) {
             const imageUploadResponse = await uploadOnCloudinary(req.file.path);
-
             if (imageUploadResponse) {
                 productData.image = {
                     url: imageUploadResponse.secure_url,
                     public_id: imageUploadResponse.public_id
                 }
-                console.log(`Image uploaded: ${productData.image.url}`.blue);
-            }
-            else {
-                console.error(`Image upload failed: ${imageUploadResponse}`.red);
+            } else {
                 return res.status(500).json({
                     success: false,
                     message: 'Image upload failed.'
@@ -47,7 +42,6 @@ const createProduct = async (req, res) => {
         }
 
         const product = await Product.create(productData);
-
         console.log(`Product created: ${product}`.blue);
 
         return res.status(201).json({
@@ -61,6 +55,65 @@ const createProduct = async (req, res) => {
             return res.status(409).json({ success: false, message: 'Product with this SKU already exists.' });
         }
         console.error(`Error creating product: ${error.message}`.red);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+}
+
+const updateProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, sku, description, category, stockLevel, threshold, buyingPrice, sellingPrice, expiryDate } = req.body;
+
+        const product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found.'
+            });
+        }
+
+        if (req.file) {
+            if (product.image && product.image.public_id) {
+                await deleteFromCloudinary(product.image.public_id);
+            }
+            const imageUploadResponse = await uploadOnCloudinary(req.file.path);
+            if (imageUploadResponse) {
+                product.image = {
+                    url: imageUploadResponse.secure_url,
+                    public_id: imageUploadResponse.public_id
+                }
+            } else {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Image upload failed.'
+                });
+            }
+        }
+
+        product.name = name || product.name;
+        product.sku = sku || product.sku;
+        product.description = description || product.description;
+        product.category = category || product.category;
+        product.expiryDate = expiryDate || product.expiryDate;
+        product.stockLevel = stockLevel !== undefined ? Number(stockLevel) : product.stockLevel;
+        product.threshold = threshold !== undefined ? Number(threshold) : product.threshold;
+        product.buyingPrice = buyingPrice !== undefined ? Number(buyingPrice) : product.buyingPrice;
+        product.sellingPrice = sellingPrice !== undefined ? Number(sellingPrice) : product.sellingPrice;
+
+        const updatedProduct = await product.save();
+        console.log(`Product updated: ${updatedProduct}`.blue);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Product updated successfully.',
+            data: updatedProduct
+        });
+    }
+    catch (error) {
+        console.error(`Error updating product: ${error.message}`.red);
         return res.status(500).json({
             success: false,
             message: 'Internal server error.'
@@ -87,69 +140,6 @@ const getAllProducts = async (req, res) => {
     }
 }
 
-const updateProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, sku, category, stockLevel, threshold, buyingPrice, sellingPrice, expiryDate } = req.body;
-
-        const product = await Product.findById(id);
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found.'
-            });
-        }
-
-        if (req.file) {
-            if (product.image && product.image.public_id) {
-                await deleteFromCloudinary(product.image.public_id);
-            }
-            const imageUploadResponse = await uploadOnCloudinary(req.file.path);
-
-            if (imageUploadResponse) {
-                product.image = {
-                    url: imageUploadResponse.secure_url,
-                    public_id: imageUploadResponse.public_id
-                }
-                console.log(`Image uploaded: ${product.image.url}`.blue);
-            } else {
-                console.error(`Image upload failed: ${imageUploadResponse}`.red);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Image upload failed.'
-                });
-            }
-        }
-
-        product.name = name || product.name;
-        product.sku = sku || product.sku;
-        product.category = category || product.category;
-        product.expiryDate = expiryDate || product.expiryDate;
-
-        // FIX: Explicitly convert string inputs from the form to Numbers to prevent type errors.
-        product.stockLevel = stockLevel !== undefined ? Number(stockLevel) : product.stockLevel;
-        product.threshold = threshold !== undefined ? Number(threshold) : product.threshold;
-        product.buyingPrice = buyingPrice !== undefined ? Number(buyingPrice) : product.buyingPrice;
-        product.sellingPrice = sellingPrice !== undefined ? Number(sellingPrice) : product.sellingPrice;
-
-        const updatedProduct = await product.save();
-
-        console.log(`Product updated: ${updatedProduct}`.blue);
-
-        return res.status(200).json({
-            success: true,
-            message: 'Product updated successfully.',
-            data: updatedProduct
-        });
-    }
-    catch (error) {
-        console.error(`Error updating product: ${error.message}`.red);
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error.'
-        });
-    }
-}
 
 const deleteProduct = async (req, res) => {
     try {

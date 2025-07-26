@@ -1,5 +1,4 @@
 const Order = require('../models/order.model');
-// FIX: Add missing model imports for Product and InventoryLog
 const Product = require('../models/product.model');
 const InventoryLog = require('../models/inventoryLog.model');
 
@@ -16,12 +15,10 @@ const createOrder = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Product not found.' });
         }
 
-        // FIX: Calculate orderValue on the backend for security and accuracy.
         const orderValue = product.buyingPrice * Number(quantity);
 
         const order = await Order.create({ product: productId, supplier, quantity, orderValue, status, expectedDelivery });
 
-        // Populate the new order with details before sending back
         const populatedOrder = await Order.findById(order._id)
             .populate('product', 'name sku')
             .populate('supplier', 'name');
@@ -56,7 +53,7 @@ const updateOrder = async (req, res) => {
         const newStatus = req.body.status;
 
         if (oldStatus === newStatus) {
-            return res.status(200).json({ success: true, data: order }); // No change needed
+            return res.status(200).json({ success: true, data: order }); 
         }
 
         const product = await Product.findById(order.product);

@@ -18,7 +18,6 @@ const Register = () => {
         setLoading(true);
         try {
             await apiClient.post('/auth/register', { name, email, password });
-            // Navigate to OTP page, passing email in state for a better UX
             navigate('/verify-otp', { state: { email } });
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed. Please try again.');

@@ -6,7 +6,6 @@ const openai = require('../services/openai.service');
 
 const updateStock = async (req, res) => {
     try {
-        // FIX: Destructure 'notes' from the request body.
         const { productId, actionType, notes } = req.body;
         const quantity = Number(req.body.quantity);
         const userId = req.user._id;
@@ -60,10 +59,8 @@ const updateStock = async (req, res) => {
             product: productId,
             user: userId,
             actionType,
-            // FIX: The model key is 'quantityChange', not 'quantityChangeValue'.
             quantityChange: quantityChangeValue,
             newStockLevel: product.stockLevel,
-            // FIX: Use the 'notes' variable that is now correctly destructured.
             notes: notes || ''
         });
 

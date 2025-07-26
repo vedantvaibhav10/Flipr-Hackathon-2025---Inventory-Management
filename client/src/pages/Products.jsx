@@ -1,52 +1,52 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import apiClient from '../api';
 import { motion } from 'framer-motion';
-import { PlusCircle, Loader2, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Loader2, Edit, Trash2, Lightbulb } from 'lucide-react';
 import Modal from '../components/common/Modal';
 import AddProductForm from '../components/products/AddProductForm';
 import EditProductForm from '../components/products/EditProductForm';
 import DeleteConfirmationModal from '../components/common/DeleteConfirmationModal';
 import { toast } from 'react-hot-toast';
+import ErrorDisplay from '../components/common/ErrorDisplay';
 
 const Products = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-
-    // State for modals
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState(null); // Holds the product object being edited
-    const [deletingProduct, setDeletingProduct] = useState(null); // Holds the product object being deleted
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [deletingProduct, setDeletingProduct] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
 
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
+        setLoading(true);
+        setError('');
         try {
-            setLoading(true);
             const response = await apiClient.get('/products');
             setProducts(response.data.data);
         } catch (err) {
-            setError('Failed to fetch products.');
-            toast.error('Failed to fetch products.');
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                setError("You are not authorized to view products.");
+            } else {
+                setError('Could not load product data. Please try again.');
+            }
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchProducts();
-    }, []);
+    }, [fetchProducts]);
 
-    // Callback for when a new product is successfully added
     const handleProductAdded = (newProduct) => {
         setProducts(prev => [newProduct, ...prev]);
     };
 
-    // Callback for when a product is successfully updated
     const handleProductUpdated = (updatedProduct) => {
         setProducts(prev => prev.map(p => p._id === updatedProduct._id ? updatedProduct : p));
     };
 
-    // Handler for the delete confirmation
     const handleDelete = async () => {
         if (!deletingProduct) return;
         setActionLoading(true);
@@ -54,14 +54,27 @@ const Products = () => {
             await apiClient.delete(`/products/${deletingProduct._id}`);
             setProducts(prev => prev.filter(p => p._id !== deletingProduct._id));
             toast.success('Product deleted successfully!');
-            setDeletingProduct(null); // Close modal on success
+            setDeletingProduct(null);
         } catch (err) {
             toast.error('Failed to delete product.');
-            console.error('Failed to delete product', err);
         } finally {
             setActionLoading(false);
         }
     };
+
+    const handleReorderSuggestion = async (productId, productName) => {
+        toast.loading(`Getting suggestion for ${productName}...`);
+        try {
+            const res = await apiClient.get(`/ai/reorder-suggestion/${productId}`);
+            toast.dismiss();
+            toast.success(res.data.suggestion, { duration: 8000 });
+        } catch (error) {
+            toast.dismiss();
+            toast.error("Failed to get reorder suggestion.");
+        }
+    };
+
+    if (error) return <ErrorDisplay message={error} onRetry={fetchProducts} />;
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -72,10 +85,9 @@ const Products = () => {
                 </motion.button>
             </div>
 
-            {loading && <div className="flex justify-center mt-10"><Loader2 className="animate-spin h-8 w-8 text-accent" /></div>}
-            {error && <div className="text-center text-danger mt-10 p-4 bg-danger/10 rounded-md">{error}</div>}
-
-            {!loading && !error && (
+            {loading ? (
+                <div className="flex justify-center mt-10"><Loader2 className="animate-spin h-8 w-8 text-accent" /></div>
+            ) : (
                 <div className="bg-primary rounded-lg border border-border overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-secondary">
@@ -106,6 +118,11 @@ const Products = () => {
                                     <td className="p-4 text-text-primary text-center">${product.sellingPrice.toFixed(2)}</td>
                                     <td className="p-4 text-center">
                                         <div className="flex justify-center items-center gap-2">
+                                            {product.stockLevel < product.threshold && (
+                                                <button onClick={() => handleReorderSuggestion(product._id, product.name)} title="AI Reorder Suggestion" className="p-2 text-text-secondary hover:text-yellow-400 transition-colors">
+                                                    <Lightbulb size={18} />
+                                                </button>
+                                            )}
                                             <button onClick={() => setEditingProduct(product)} className="p-2 text-text-secondary hover:text-accent transition-colors"><Edit size={18} /></button>
                                             <button onClick={() => setDeletingProduct(product)} className="p-2 text-text-secondary hover:text-danger transition-colors"><Trash2 size={18} /></button>
                                         </div>
@@ -117,7 +134,6 @@ const Products = () => {
                 </div>
             )}
 
-            {/* --- MODALS --- */}
             <Modal title="Create New Product" isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
                 <AddProductForm onProductAdded={handleProductAdded} onClose={() => setIsAddModalOpen(false)} />
             </Modal>

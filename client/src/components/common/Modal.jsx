@@ -25,7 +25,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                     onClick={onClose}
                 >
                     <motion.div
-                        className="bg-primary rounded-lg shadow-xl w-full max-w-lg border border-border flex flex-col max-h-[90vh]" // <-- CHANGE HERE
+                        className="bg-primary rounded-lg shadow-xl w-full max-w-lg border border-border flex flex-col max-h-[90vh]"
                         variants={modalVariants}
                         exit="exit"
                         onClick={(e) => e.stopPropagation()}
@@ -36,7 +36,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                                 <X size={24} />
                             </button>
                         </div>
-                        <div className="p-6 overflow-y-auto"> {/* <-- CHANGE HERE */}
+                        <div className="p-6 overflow-y-auto">
                             {children}
                         </div>
                     </motion.div>

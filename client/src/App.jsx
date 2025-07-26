@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
+import { Toaster } from 'react-hot-toast';
 
 import MainLayout from './components/layout/MainLayout';
 import Login from './pages/Auth/Login';
@@ -28,27 +29,41 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/verify-otp" element={<VerifyOTP />} />
+    <>
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          className: '',
+          style: {
+            background: '#21262D',
+            color: '#C9D1D9', 
+            border: '1px solid #30363D', 
+          },
+        }}
+      />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/verify-otp" element={<VerifyOTP />} />
 
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Dashboard />} />
-        <Route path="inventory" element={<Products />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="suppliers" element={<Suppliers />} />
-        <Route path="orders" element={<Orders />} />
-        <Route path="health" element={<HealthCheck />} />
-      </Route>
-    </Routes>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="inventory" element={<Products />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="suppliers" element={<Suppliers />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="health" element={<HealthCheck />} />
+        </Route>
+      </Routes>
+    </>
   );
 }
 

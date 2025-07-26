@@ -17,13 +17,10 @@ configureCloudinary();
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
-  // Add your deployed frontend URL here when you have one
 ];
 
-// CORRECTED CORS CONFIGURATION
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or Postman) and from allowed origins
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
