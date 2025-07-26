@@ -5,6 +5,14 @@ InvTrack is a modern, full-stack inventory management system designed to streaml
 **Live Demo:** [[https://your-frontend-deployment-link.com](https://inventory-management-topaz-tau.vercel.app/)]
 **Backend API:** [https://inventory-management-backend-gmik.onrender.com](https://inventory-management-backend-gmik.onrender.com)
 
+Demo of v1 of Inventory Management System - 
+
+
+
+https://github.com/user-attachments/assets/8a026489-b5e3-4c94-9698-3d6ad96b93bd
+
+
+
 ## ✨ Key Features
 
 ### Core Functionality
