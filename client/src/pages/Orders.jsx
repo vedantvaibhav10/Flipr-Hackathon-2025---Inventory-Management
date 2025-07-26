@@ -1,18 +1,22 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useCachedData } from '../hooks/useCachedData';
 import apiClient from '../api';
 import { motion } from 'framer-motion';
-import { Loader2, PlusCircle } from 'lucide-react';
+import { PlusCircle, Loader2, Trash2, WifiOff } from 'lucide-react';
 import Modal from '../components/common/Modal';
 import CreateOrderForm from '../components/orders/CreateOrderForm';
+import DeleteConfirmationModal from '../components/common/DeleteConfirmationModal';
 import { toast } from 'react-hot-toast';
-import ErrorDisplay from '../components/common/ErrorDisplay';
+import { db } from '../db';
+import { addToOutbox } from '../services/syncManager';
+import { useAuth } from '../hooks/useAuth';
 
 const getStatusColor = (status) => {
     const colors = {
         Ordered: 'bg-blue-500/20 text-blue-400',
         Shipped: 'bg-yellow-500/20 text-yellow-400',
-        Delivered: 'bg-green-500/20 text-green-400',
-        Cancelled: 'bg-red-500/20 text-red-400',
+        Delivered: 'bg-success/20 text-success',
+        Cancelled: 'bg-danger/20 text-danger',
         Returned: 'bg-purple-500/20 text-purple-400',
     };
     return colors[status] || 'bg-gray-500/20 text-gray-400';
@@ -21,54 +25,58 @@ const getStatusColor = (status) => {
 const ORDER_STATUSES = ['Ordered', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
 
 const Orders = () => {
-    const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const { data: orders, loading, error, forceSync } = useCachedData('orders', '/orders');
+    const { user } = useAuth();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [deletingOrder, setDeletingOrder] = useState(null);
+    const [actionLoading, setActionLoading] = useState(false);
 
-    const fetchOrders = useCallback(async () => {
-        setLoading(true);
-        setError('');
-        try {
-            const response = await apiClient.get('/orders');
-            setOrders(response.data.data);
-        } catch (err) {
-            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-                setError("You are not authorized to view orders.");
-            } else {
-                setError('Could not load order data. Please try again.');
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchOrders();
-    }, [fetchOrders]);
-
-    const handleOrderCreated = (newOrder) => {
-        setOrders(prev => [newOrder, ...prev]);
-        toast.success('Order created successfully!');
-    };
+    const handleMutationSuccess = () => forceSync();
 
     const handleStatusChange = async (orderId, newStatus) => {
-        const originalOrders = [...orders];
-        setOrders(prev => prev.map(order =>
-            order._id === orderId ? { ...order, status: newStatus } : order
-        ));
+        const originalOrders = JSON.parse(JSON.stringify(orders));
+        await db.orders.update(orderId, { status: newStatus });
 
         try {
-            const response = await apiClient.put(`/orders/${orderId}`, { status: newStatus });
-            setOrders(prev => prev.map(order => order._id === orderId ? response.data.data : order));
+            await apiClient.put(`/orders/${orderId}`, { status: newStatus });
             toast.success(`Order status updated to ${newStatus}`);
+            forceSync();
         } catch (err) {
-            setOrders(originalOrders);
-            toast.error(err.response?.data?.message || 'Failed to update order status.');
+            if (!err.response) {
+                toast.success('Offline: Status change saved, will sync later.');
+                await addToOutbox({
+                    url: `/orders/${orderId}`,
+                    method: 'put',
+                    data: { status: newStatus },
+                });
+            } else {
+                await db.orders.bulkPut(originalOrders);
+                toast.error(err.response?.data?.message || 'Failed to update order status.');
+            }
         }
     };
 
-    if (error) return <ErrorDisplay message={error} onRetry={fetchOrders} />;
+    const handleDelete = async () => {
+        if (!deletingOrder) return;
+        setActionLoading(true);
+        try {
+            await apiClient.delete(`/orders/${deletingOrder._id}`);
+            await db.orders.delete(deletingOrder._id);
+            toast.success("Order deleted successfully!");
+            setDeletingOrder(null);
+        } catch (err) {
+            if (!err.response && !deletingOrder._id.startsWith('offline_')) {
+                toast.success('Offline: Delete action saved, will sync later.');
+                await db.orders.delete(deletingOrder._id);
+                await addToOutbox({ url: `/orders/${deletingOrder._id}`, method: 'delete' });
+                setDeletingOrder(null);
+            } else {
+                toast.error("Failed to delete order.");
+            }
+        } finally {
+            setActionLoading(false);
+        }
+    };
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -79,7 +87,13 @@ const Orders = () => {
                 </motion.button>
             </div>
 
-            {loading ? (
+            {error && (
+                <div className="flex items-center gap-2 text-yellow-400 bg-yellow-500/10 p-3 rounded-md mb-4 text-sm">
+                    <WifiOff size={16} /> {error}
+                </div>
+            )}
+
+            {(loading && orders.length === 0) ? (
                 <div className="flex justify-center mt-10"><Loader2 className="animate-spin h-8 w-8 text-accent" /></div>
             ) : (
                 <div className="bg-primary rounded-lg border border-border overflow-x-auto">
@@ -92,6 +106,7 @@ const Orders = () => {
                                 <th className="p-4 font-semibold text-text-secondary text-center">Value</th>
                                 <th className="p-4 font-semibold text-text-secondary text-center">Status</th>
                                 <th className="p-4 font-semibold text-text-secondary">Expected Delivery</th>
+                                {user.role === 'Admin' && <th className="p-4 font-semibold text-text-secondary text-center">Actions</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -114,6 +129,13 @@ const Orders = () => {
                                         </select>
                                     </td>
                                     <td className="p-4 text-text-secondary">{new Date(order.expectedDelivery).toLocaleDateString()}</td>
+                                    {user.role === 'Admin' && (
+                                        <td className="p-4 text-center">
+                                            <button onClick={() => setDeletingOrder(order)} className="p-2 text-text-secondary hover:text-danger transition-colors">
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -122,8 +144,18 @@ const Orders = () => {
             )}
 
             <Modal title="Create New Order" isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
-                <CreateOrderForm onOrderCreated={handleOrderCreated} onClose={() => setIsAddModalOpen(false)} />
+                <CreateOrderForm onOrderCreated={handleMutationSuccess} onClose={() => setIsAddModalOpen(false)} />
             </Modal>
+
+            {deletingOrder && (
+                <DeleteConfirmationModal
+                    isOpen={!!deletingOrder}
+                    onClose={() => setDeletingOrder(null)}
+                    onConfirm={handleDelete}
+                    loading={actionLoading}
+                    productName={`Order for ${deletingOrder.product?.name || 'N/A'}`}
+                />
+            )}
         </motion.div>
     );
 };

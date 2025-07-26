@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../../api';
+import { db } from '../../db';
+import { addToOutbox } from '../../services/syncManager';
 import FormField from '../common/FormField';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
@@ -31,12 +33,24 @@ const EditSupplierForm = ({ supplier, onSupplierUpdated, onClose }) => {
         try {
             const response = await apiClient.put(`/suppliers/${supplier._id}`, formData);
             toast.success('Supplier updated successfully!');
-            onSupplierUpdated(response.data.data);
+            onSupplierUpdated();
             onClose();
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Failed to update supplier.';
-            setError(errorMessage);
-            toast.error(errorMessage);
+            if (!err.response) { // Offline
+                toast.success('Offline: Supplier update saved locally, will sync later.');
+                await db.suppliers.update(supplier._id, formData);
+                await addToOutbox({
+                    url: `/suppliers/${supplier._id}`,
+                    method: 'put',
+                    data: formData,
+                });
+                onSupplierUpdated();
+                onClose();
+            } else {
+                const errorMessage = err.response?.data?.message || 'Failed to update supplier.';
+                setError(errorMessage);
+                toast.error(errorMessage);
+            }
         } finally {
             setLoading(false);
         }

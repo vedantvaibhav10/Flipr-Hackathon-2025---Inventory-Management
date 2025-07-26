@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../../api';
+import { db } from '../../db';
+import { addToOutbox } from '../../services/syncManager';
 import FormField from '../common/FormField';
 import { motion } from 'framer-motion';
 import { Loader2, Upload, Edit, PackageMinus, Sparkles } from 'lucide-react';
@@ -64,20 +66,34 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
         setDetailsLoading(true);
         setError('');
 
-        const productData = new FormData();
-        Object.keys(detailsData).forEach(key => productData.append(key, detailsData[key]));
-        if (imageFile) productData.append('image', imageFile);
+        const productPayload = { ...detailsData };
+        const productFormData = new FormData();
+        Object.keys(productPayload).forEach(key => productFormData.append(key, productPayload[key]));
+        if (imageFile) productFormData.append('image', imageFile);
 
         try {
-            const response = await apiClient.put(`/products/${product._id}`, productData, {
+            const response = await apiClient.put(`/products/${product._id}`, productFormData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success('Product details updated!');
-            onProductUpdated(response.data.data);
+            onProductUpdated();
+            onClose();
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Failed to update details.';
-            setError(errorMessage);
-            toast.error(errorMessage);
+            if (!err.response) { // Offline
+                toast.success('Offline: Product update saved locally, will sync later.');
+                await db.products.update(product._id, productPayload);
+                await addToOutbox({
+                    url: `/products/${product._id}`,
+                    method: 'put',
+                    data: productPayload, // Note: FormData is not ideal for offline. Sending plain object.
+                });
+                onProductUpdated();
+                onClose();
+            } else {
+                const errorMessage = err.response?.data?.message || 'Failed to update details.';
+                setError(errorMessage);
+                toast.error(errorMessage);
+            }
         } finally {
             setDetailsLoading(false);
         }
@@ -102,12 +118,16 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
         try {
             const response = await apiClient.post(`/inventory/update`, payload);
             toast.success('Stock adjusted successfully!');
-            onProductUpdated(response.data.data);
+            onProductUpdated();
             setAdjustmentData({ quantity: '', actionType: 'RESTOCK', notes: '' });
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Failed to adjust stock.';
-            setError(errorMessage);
-            toast.error(errorMessage);
+            if (!err.response) { // Offline
+                toast.error('Offline mode: Manual stock adjustments cannot be made offline.');
+            } else {
+                const errorMessage = err.response?.data?.message || 'Failed to adjust stock.';
+                setError(errorMessage);
+                toast.error(errorMessage);
+            }
         } finally {
             setAdjustmentLoading(false);
         }

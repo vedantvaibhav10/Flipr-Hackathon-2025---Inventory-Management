@@ -4,29 +4,36 @@ import FormField from '../common/FormField';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { db } from '../../db';
+import { addToOutbox } from '../../services/syncManager';
 
 const AddSupplierForm = ({ onSupplierAdded, onClose }) => {
     const [formData, setFormData] = useState({ name: '', contactNumber: '', email: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
         try {
-            const response = await apiClient.post('/suppliers', formData);
+            await apiClient.post('/suppliers', formData);
             toast.success('Supplier added successfully!');
-            onSupplierAdded(response.data.data);
+            onSupplierAdded(); // Correct for online
             onClose();
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Failed to add supplier.';
-            setError(errorMessage);
-            toast.error(errorMessage);
+            if (!err.response) { // Offline
+                toast.success('Offline: Supplier saved locally, will sync later.');
+                const offlineId = `offline_${Date.now()}`;
+                await db.suppliers.add({ ...formData, _id: offlineId });
+                await addToOutbox({ url: '/suppliers', method: 'post', data: formData });
+                // No sync call here
+                onClose();
+            } else {
+                setError(err.response?.data?.message || 'Failed to add supplier.');
+            }
         } finally {
             setLoading(false);
         }

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../../api';
+import { db } from '../../db';
+import { addToOutbox } from '../../services/syncManager';
 import FormField from '../common/FormField';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -19,12 +21,12 @@ const CreateOrderForm = ({ onOrderCreated, onClose }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [productsRes, suppliersRes] = await Promise.all([
-                    apiClient.get('/products'),
-                    apiClient.get('/suppliers')
+                const [localProducts, localSuppliers] = await Promise.all([
+                    db.products.toArray(),
+                    db.suppliers.toArray()
                 ]);
-                setProducts(productsRes.data.data);
-                setSuppliers(suppliersRes.data.data);
+                setProducts(localProducts);
+                setSuppliers(localSuppliers);
             } catch (err) {
                 setError('Failed to load products or suppliers.');
             }
@@ -41,15 +43,48 @@ const CreateOrderForm = ({ onOrderCreated, onClose }) => {
         e.preventDefault();
         setLoading(true);
         setError('');
+
+        const selectedProduct = products.find(p => p._id === formData.product);
+        if (!selectedProduct) {
+            setError('Please select a valid product.');
+            setLoading(false);
+            return;
+        }
+
+        const orderPayload = {
+            ...formData,
+            orderValue: selectedProduct.buyingPrice * Number(formData.quantity)
+        };
+
         try {
-            const response = await apiClient.post('/orders', formData);
+            const response = await apiClient.post('/orders', orderPayload);
             toast.success('Order created successfully!');
-            onOrderCreated(response.data.data);
+            onOrderCreated();
             onClose();
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Failed to create order.';
-            setError(errorMessage);
-            toast.error(errorMessage);
+            if (!err.response) { // Offline
+                toast.success('Offline: Order saved locally, will sync later.');
+                const offlineId = `offline_${Date.now()}`;
+
+                // --- FIX: Save full objects for optimistic UI ---
+                const selectedSupplier = suppliers.find(s => s._id === formData.supplier);
+                const offlineOrder = {
+                    ...orderPayload,
+                    _id: offlineId,
+                    product: selectedProduct, // Save the full product object
+                    supplier: selectedSupplier, // Save the full supplier object
+                };
+
+                await db.orders.add(offlineOrder);
+                await addToOutbox({ url: '/orders', method: 'post', data: orderPayload });
+
+                // Do not call onOrderCreated() here
+                onClose();
+            } else {
+                const errorMessage = err.response?.data?.message || 'Failed to create order.';
+                setError(errorMessage);
+                toast.error(errorMessage);
+            }
         } finally {
             setLoading(false);
         }
@@ -60,16 +95,16 @@ const CreateOrderForm = ({ onOrderCreated, onClose }) => {
             {error && <p className="text-sm text-danger text-center">{error}</p>}
 
             <div>
-                <label htmlFor="product" className="form-label">Product</label>
-                <select id="product" name="product" value={formData.product} onChange={handleChange} className="input-field" required>
+                <label htmlFor="product" className="block text-sm font-medium text-text-secondary mb-1">Product</label>
+                <select id="product" name="product" value={formData.product} onChange={handleChange} className="block w-full px-3 py-2 bg-secondary border border-border rounded-md" required>
                     <option value="" disabled>Select a product</option>
                     {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                 </select>
             </div>
 
             <div>
-                <label htmlFor="supplier" className="form-label">Supplier</label>
-                <select id="supplier" name="supplier" value={formData.supplier} onChange={handleChange} className="input-field" required>
+                <label htmlFor="supplier" className="block text-sm font-medium text-text-secondary mb-1">Supplier</label>
+                <select id="supplier" name="supplier" value={formData.supplier} onChange={handleChange} className="block w-full px-3 py-2 bg-secondary border border-border rounded-md" required>
                     <option value="" disabled>Select a supplier</option>
                     {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                 </select>
@@ -79,8 +114,8 @@ const CreateOrderForm = ({ onOrderCreated, onClose }) => {
             <FormField label="Expected Delivery" id="expectedDelivery" name="expectedDelivery" type="date" value={formData.expectedDelivery} onChange={handleChange} required />
 
             <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-                <button type="submit" disabled={loading} className="btn-primary w-32">
+                <button type="button" onClick={onClose} className="px-4 py-2 bg-secondary rounded-md border border-border">Cancel</button>
+                <button type="submit" disabled={loading} className="px-4 py-2 text-white bg-accent rounded-md w-32 flex justify-center">
                     {loading ? <Loader2 className="animate-spin" /> : 'Create Order'}
                 </button>
             </div>

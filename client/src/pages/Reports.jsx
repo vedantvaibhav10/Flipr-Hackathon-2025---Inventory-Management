@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import apiClient from '../api';
+import { useCachedData } from '../hooks/useCachedData'; // Import the hook
 import { motion } from 'framer-motion';
-import { Loader2, FileText, ArrowUpCircle, ArrowDownCircle, ArrowRightCircle, AlertCircle, RotateCcw } from 'lucide-react';
+import { Loader2, FileText, ArrowUpCircle, ArrowDownCircle, ArrowRightCircle, AlertCircle, RotateCcw, WifiOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import ErrorDisplay from '../components/common/ErrorDisplay';
 
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('en-US', {
@@ -24,30 +24,8 @@ const getActionDetails = (action) => {
 };
 
 const Reports = () => {
-    const [logs, setLogs] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-
-    const fetchInventoryLogs = useCallback(async () => {
-        setLoading(true);
-        setError('');
-        try {
-            const response = await apiClient.get('/inventory/logs');
-            setLogs(response.data.data);
-        } catch (err) {
-            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-                setError("You are not authorized to view reports.");
-            } else {
-                setError('Could not load report data. Please try again.');
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchInventoryLogs();
-    }, [fetchInventoryLogs]);
+    // Use the hook to manage inventory logs data
+    const { data: logs, loading, error, forceSync } = useCachedData('inventoryLogs', '/inventory/logs');
 
     const handleExport = async () => {
         try {
@@ -64,8 +42,6 @@ const Reports = () => {
             toast.error('Failed to export products.');
         }
     };
-
-    if (error) return <ErrorDisplay message={error} onRetry={fetchInventoryLogs} />;
 
     return (
         <motion.div
@@ -86,7 +62,13 @@ const Reports = () => {
                 </motion.button>
             </div>
 
-            {loading ? (
+            {error && (
+                <div className="flex items-center gap-2 text-yellow-400 bg-yellow-500/10 p-3 rounded-md mb-4 text-sm">
+                    <WifiOff size={16} /> {error}
+                </div>
+            )}
+
+            {(loading && logs.length === 0) ? (
                 <div className="flex justify-center mt-10"><Loader2 className="animate-spin h-8 w-8 text-accent" /></div>
             ) : (
                 <div>

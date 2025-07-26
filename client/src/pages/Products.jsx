@@ -1,50 +1,25 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useCachedData } from '../hooks/useCachedData';
 import apiClient from '../api';
 import { motion } from 'framer-motion';
-import { PlusCircle, Loader2, Edit, Trash2, Lightbulb } from 'lucide-react';
+import { PlusCircle, Loader2, Edit, Trash2, Lightbulb, WifiOff } from 'lucide-react';
 import Modal from '../components/common/Modal';
 import AddProductForm from '../components/products/AddProductForm';
 import EditProductForm from '../components/products/EditProductForm';
 import DeleteConfirmationModal from '../components/common/DeleteConfirmationModal';
 import { toast } from 'react-hot-toast';
-import ErrorDisplay from '../components/common/ErrorDisplay';
+import { db } from '../db';
+import { addToOutbox } from '../services/syncManager';
 
 const Products = () => {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const { data: products, loading, error, forceSync } = useCachedData('products', '/products');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [deletingProduct, setDeletingProduct] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
 
-    const fetchProducts = useCallback(async () => {
-        setLoading(true);
-        setError('');
-        try {
-            const response = await apiClient.get('/products');
-            setProducts(response.data.data);
-        } catch (err) {
-            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-                setError("You are not authorized to view products.");
-            } else {
-                setError('Could not load product data. Please try again.');
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchProducts();
-    }, [fetchProducts]);
-
-    const handleProductAdded = (newProduct) => {
-        setProducts(prev => [newProduct, ...prev]);
-    };
-
-    const handleProductUpdated = (updatedProduct) => {
-        setProducts(prev => prev.map(p => p._id === updatedProduct._id ? updatedProduct : p));
+    const handleMutationSuccess = () => {
+        forceSync();
     };
 
     const handleDelete = async () => {
@@ -52,11 +27,18 @@ const Products = () => {
         setActionLoading(true);
         try {
             await apiClient.delete(`/products/${deletingProduct._id}`);
-            setProducts(prev => prev.filter(p => p._id !== deletingProduct._id));
-            toast.success('Product deleted successfully!');
+            await db.products.delete(deletingProduct._id);
+            toast.success("Product deleted!");
             setDeletingProduct(null);
         } catch (err) {
-            toast.error('Failed to delete product.');
+            if (!err.response && !deletingProduct._id.startsWith('offline_')) {
+                toast.success('Offline: Delete action saved, will sync later.');
+                await db.products.delete(deletingProduct._id);
+                await addToOutbox({ url: `/products/${deletingProduct._id}`, method: 'delete' });
+                setDeletingProduct(null);
+            } else {
+                toast.error("Failed to delete product.");
+            }
         } finally {
             setActionLoading(false);
         }
@@ -74,18 +56,22 @@ const Products = () => {
         }
     };
 
-    if (error) return <ErrorDisplay message={error} onRetry={fetchProducts} />;
-
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-text-primary">Products</h1>
+                <h1 className="text-3xl font-bold text-text-primary">Inventory</h1>
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg shadow-md hover:bg-accent/90 transition-colors">
                     <PlusCircle size={20} /> Add Product
                 </motion.button>
             </div>
 
-            {loading ? (
+            {error && (
+                <div className="flex items-center gap-2 text-yellow-400 bg-yellow-500/10 p-3 rounded-md mb-4 text-sm">
+                    <WifiOff size={16} /> {error}
+                </div>
+            )}
+
+            {(loading && products.length === 0) ? (
                 <div className="flex justify-center mt-10"><Loader2 className="animate-spin h-8 w-8 text-accent" /></div>
             ) : (
                 <div className="bg-primary rounded-lg border border-border overflow-x-auto">
@@ -115,7 +101,7 @@ const Products = () => {
                                             {product.stockLevel}
                                         </span>
                                     </td>
-                                    <td className="p-4 text-text-primary text-center">${product.sellingPrice.toFixed(2)}</td>
+                                    <td className="p-4 text-text-primary text-center">${product.sellingPrice?.toFixed(2)}</td>
                                     <td className="p-4 text-center">
                                         <div className="flex justify-center items-center gap-2">
                                             {product.stockLevel < product.threshold && (
@@ -135,12 +121,12 @@ const Products = () => {
             )}
 
             <Modal title="Create New Product" isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
-                <AddProductForm onProductAdded={handleProductAdded} onClose={() => setIsAddModalOpen(false)} />
+                <AddProductForm onProductAdded={handleMutationSuccess} onClose={() => setIsAddModalOpen(false)} />
             </Modal>
 
             {editingProduct && (
                 <Modal title="Edit Product" isOpen={!!editingProduct} onClose={() => setEditingProduct(null)}>
-                    <EditProductForm product={editingProduct} onProductUpdated={handleProductUpdated} onClose={() => setEditingProduct(null)} />
+                    <EditProductForm product={editingProduct} onProductUpdated={handleMutationSuccess} onClose={() => setEditingProduct(null)} />
                 </Modal>
             )}
 

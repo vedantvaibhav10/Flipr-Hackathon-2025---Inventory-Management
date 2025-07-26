@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '../../api';
+import { db } from '../../db';
+import { addToOutbox } from '../../services/syncManager';
 import FormField from '../common/FormField';
 import { motion } from 'framer-motion';
 import { Loader2, Upload, Sparkles } from 'lucide-react';
@@ -7,15 +9,8 @@ import { toast } from 'react-hot-toast';
 
 const AddProductForm = ({ onProductAdded, onClose }) => {
     const [formData, setFormData] = useState({
-        name: '',
-        sku: '',
-        category: '',
-        description: '',
-        stockLevel: '',
-        threshold: '',
-        buyingPrice: '',
-        sellingPrice: '',
-        expiryDate: '',
+        name: '', sku: '', category: '', description: '', stockLevel: '',
+        threshold: '', buyingPrice: '', sellingPrice: '', expiryDate: '',
     });
     const [imageFile, setImageFile] = useState(null);
     const [error, setError] = useState('');
@@ -24,7 +19,7 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
     const [suggestedCategory, setSuggestedCategory] = useState('');
 
     const suggestCategory = useCallback(async (productName) => {
-        if (productName.length > 3) {
+        if (productName.length > 3 && navigator.onLine) {
             try {
                 const res = await apiClient.post('/products/suggest-category', { name: productName });
                 setSuggestedCategory(res.data.suggestedCategory);
@@ -41,14 +36,8 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
         return () => clearTimeout(debounce);
     }, [formData.name, suggestCategory]);
 
-
-    const handleChange = (e) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    };
-
-    const handleFileChange = (e) => {
-        setImageFile(e.target.files[0]);
-    };
+    const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const handleFileChange = (e) => setImageFile(e.target.files[0]);
 
     const handleGenerateDescription = async () => {
         if (!formData.name || !formData.category) {
@@ -71,19 +60,41 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
         setError('');
         setLoading(true);
 
-        const productData = new FormData();
-        Object.keys(formData).forEach(key => productData.append(key, formData[key]));
-        if (imageFile) productData.append('image', imageFile);
+        const productPayload = { ...formData };
 
         try {
-            const response = await apiClient.post('/products', productData, {
+            // ONLINE PATH
+            const productFormData = new FormData();
+            Object.keys(productPayload).forEach(key => productFormData.append(key, productPayload[key]));
+            if (imageFile) productFormData.append('image', imageFile);
+
+            await apiClient.post('/products', productFormData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success('Product created successfully!');
-            onProductAdded(response.data.data);
+            onProductAdded(); // Call the sync function ONLY when online
             onClose();
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to create product.');
+            if (!err.response) { // OFFLINE PATH
+                toast.success('Offline: Product saved locally, will sync later.');
+                const offlineId = `offline_${Date.now()}`;
+
+                // Optimistic UI: Add to local DB immediately. useLiveQuery will update the UI.
+                await db.products.add({ ...productPayload, _id: offlineId });
+
+                // Add the plain JSON object to the outbox. The SyncManager will handle it.
+                await addToOutbox({
+                    url: '/products',
+                    method: 'post',
+                    data: productPayload,
+                });
+
+                // DO NOT call onProductAdded(). Just close the modal.
+                // The useLiveQuery hook will automatically update the product list.
+                onClose();
+            } else {
+                setError(err.response?.data?.message || 'Failed to create product.');
+            }
         } finally {
             setLoading(false);
         }
