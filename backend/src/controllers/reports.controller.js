@@ -18,6 +18,14 @@ const getDashboardSummary = async (req, res) => {
                         { $match: { $expr: { $lt: ["$stockLevel", "$threshold"] } } },
                         { $count: "count" }
                     ],
+                    "stockByCategory": [
+                        {
+                            $group: {
+                                _id: "$category",
+                                totalStock: { $sum: "$stockLevel" }
+                            }
+                        }
+                    ],
                     "categories": [
                         { $group: { _id: "$category", count: { $sum: 1 } } },
                         { $project: { _id: 0, name: "$_id", count: 1 } }
@@ -58,6 +66,10 @@ const getDashboardSummary = async (req, res) => {
 
 
         const summary = {
+            totalProducts: productStats[0].general[0]?.totalProducts || 0,
+            totalStockValue: productStats[0].general[0]?.totalStockValue || 0,
+            lowStockCount: productStats[0].lowStock[0]?.count || 0,
+            stockByCategory: productStats[0].stockByCategory,
             inventorySummary: {
                 quantityInHand: productStats[0].general[0]?.totalStockValue || 0,
                 toBeReceived: formattedPurchaseStats.ordered?.count || 0,
@@ -78,7 +90,6 @@ const getDashboardSummary = async (req, res) => {
                 cancel: formattedPurchaseStats.cancelled?.count || 0,
                 return: formattedPurchaseStats.returned?.count || 0,
             },
-            lowStockCount: productStats[0].lowStock[0]?.count || 0
         };
 
         res.status(200).json({ success: true, data: summary });
