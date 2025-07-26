@@ -3,6 +3,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { LogIn, Loader2 } from 'lucide-react';
+import { FaGoogle, FaGithub } from 'react-icons/fa';
+
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -37,6 +40,21 @@ const Login = () => {
                 <div className="text-center">
                     <h1 className="text-3xl font-bold text-accent">Welcome Back</h1>
                     <p className="text-text-secondary mt-2">Log in to manage your inventory.</p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <a href={`${API_URL}/api/v1/auth/google`} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-secondary border border-border rounded-md hover:bg-secondary/80 transition-colors">
+                        <FaGoogle /> Sign in with Google
+                    </a>
+                    <a href={`${API_URL}/api/v1/auth/github`} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-secondary border border-border rounded-md hover:bg-secondary/80 transition-colors">
+                        <FaGithub /> Sign in with GitHub
+                    </a>
+                </div>
+
+                <div className="flex items-center text-center">
+                    <hr className="flex-grow border-border" />
+                    <span className="px-4 text-text-secondary text-sm">OR</span>
+                    <hr className="flex-grow border-border" />
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">

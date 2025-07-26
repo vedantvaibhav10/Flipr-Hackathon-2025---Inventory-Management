@@ -7,6 +7,8 @@ const mainRouter = require('./routes/index');
 const cookieParser = require('cookie-parser');
 const healthRouter = require('./routes/health.routes');
 const cors = require('cors');
+const passport = require('passport');
+require('./config/passport');
 
 const PORT = process.env.PORT || 5000;
 
@@ -29,7 +31,7 @@ app.use(cors({
   credentials: true,
 }));
 
-
+app.use(passport.initialize());
 
 app.use(express.json());
 app.use(cookieParser());
