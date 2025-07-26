@@ -13,17 +13,17 @@ import Suppliers from './pages/Suppliers';
 import Orders from './pages/Orders';
 import HealthCheck from './pages/HealthCheck';
 import Settings from './pages/Settings';
+import { useEffect } from 'react';
+import { initializeSync } from './services/syncManager';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    // While checking for a user session, you can show a global loader
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   if (!user) {
-    // If no user is found after checking, redirect to the login page
     return <Navigate to="/login" replace />;
   }
 
@@ -31,6 +31,10 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  useEffect(() => {
+    const cleanupSync = initializeSync();
+    return () => cleanupSync();
+  }, []);
   return (
     <>
       <Toaster
@@ -39,19 +43,17 @@ function App() {
         toastOptions={{
           className: '',
           style: {
-            background: '#161B22', // primary color
-            color: '#C9D1D9',      // text-primary color
-            border: '1px solid #30363D', // border color
+            background: '#161B22',
+            color: '#C9D1D9',     
+            border: '1px solid #30363D',
           },
         }}
       />
       <Routes>
-        {/* Public routes for authentication */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-otp" element={<VerifyOTP />} />
 
-        {/* Protected routes that use the MainLayout */}
         <Route
           path="/"
           element={
@@ -60,7 +62,6 @@ function App() {
             </ProtectedRoute>
           }
         >
-          {/* Child routes will be rendered inside MainLayout's <Outlet /> */}
           <Route index element={<Dashboard />} />
           <Route path="inventory" element={<Products />} />
           <Route path="reports" element={<Reports />} />

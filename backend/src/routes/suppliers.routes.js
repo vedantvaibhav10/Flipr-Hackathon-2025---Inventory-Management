@@ -10,9 +10,6 @@ const authorize = require('../middleware/role.middleware');
 
 const router = Router();
 
-router.post('/sync', protect, authorize('Admin'), createSupplier);
-router.put('/:id/sync', protect, authorize('Admin'), updateSupplier);
-
 router.route('/')
     .post(protect, authorize('Admin'), createSupplier)
     .get(protect, authorize('Admin', 'Staff'), getSuppliers);

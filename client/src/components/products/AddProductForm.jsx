@@ -63,6 +63,7 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
         const productPayload = { ...formData };
 
         try {
+            // ONLINE PATH
             const productFormData = new FormData();
             Object.keys(productPayload).forEach(key => productFormData.append(key, productPayload[key]));
             if (imageFile) productFormData.append('image', imageFile);
@@ -71,22 +72,22 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success('Product created successfully!');
-            onProductAdded();
+            onProductAdded(); // Call sync function ONLY when online
             onClose();
         } catch (err) {
-            if (!err.response) {
+            if (!err.response) { // OFFLINE PATH
                 toast.success('Offline: Product saved locally, will sync later.');
                 const offlineId = `offline_${Date.now()}`;
 
                 await db.products.add({ ...productPayload, _id: offlineId });
 
                 await addToOutbox({
-                    url: '/products',
+                    url: '/products/sync', // Use the dedicated sync route
                     method: 'post',
                     data: productPayload,
                 });
 
-                onClose();
+                onClose(); // DO NOT call onProductAdded() here
             } else {
                 setError(err.response?.data?.message || 'Failed to create product.');
             }

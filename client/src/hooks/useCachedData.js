@@ -5,7 +5,6 @@ import apiClient from '../api';
 
 export const useCachedData = (tableName, apiEndpoint) => {
     const localData = useLiveQuery(() => db[tableName].toArray(), []);
-
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -15,15 +14,12 @@ export const useCachedData = (tableName, apiEndpoint) => {
         try {
             const response = await apiClient.get(apiEndpoint);
             const serverData = response.data.data;
-
             await db.transaction('rw', db[tableName], async () => {
                 await db[tableName].clear();
                 await db[tableName].bulkPut(serverData);
             });
-
         } catch (err) {
             setError('Could not connect to the server. Displaying offline data.');
-            console.error(`Failed to sync ${tableName}:`, err);
         } finally {
             setLoading(false);
         }
@@ -31,6 +27,18 @@ export const useCachedData = (tableName, apiEndpoint) => {
 
     useEffect(() => {
         syncData();
+
+        const handleSyncComplete = () => {
+            console.log(`'datasync-complete' event heard by ${tableName}. Refetching data.`);
+            syncData();
+        };
+
+        window.addEventListener('datasync-complete', handleSyncComplete);
+
+        return () => {
+            window.removeEventListener('datasync-complete', handleSyncComplete);
+        };
+
     }, [syncData]);
 
     return {
