@@ -11,7 +11,7 @@ const MainLayout = () => {
     useEffect(() => {
         const checkBackupStatus = () => {
             const lastBackupTimestamp = localStorage.getItem('lastBackupTimestamp');
-            if (!lastBackupTimestamp) return; // Don't remind if they've never backed up
+            if (!lastBackupTimestamp) return;
 
             const oneDay = 24 * 60 * 60 * 1000;
             if (Date.now() - new Date(lastBackupTimestamp).getTime() > oneDay) {
@@ -27,12 +27,11 @@ const MainLayout = () => {
                         </div>
                     </div>
                 ), {
-                    duration: 10000, // Keep the toast on screen for 10 seconds
+                    duration: 10000, 
                 });
             }
         };
 
-        // Check once, 5 seconds after the app loads
         const timer = setTimeout(checkBackupStatus, 5000);
         return () => clearTimeout(timer);
     }, []);

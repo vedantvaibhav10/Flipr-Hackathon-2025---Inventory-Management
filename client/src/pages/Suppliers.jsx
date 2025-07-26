@@ -10,11 +10,11 @@ import AddSupplierForm from '../components/suppliers/AddSupplierForm';
 import EditSupplierForm from '../components/suppliers/EditSupplierForm';
 import { db } from '../db';
 import { addToOutbox } from '../services/syncManager';
-import { useAuth } from '../hooks/useAuth'; // Import useAuth
+import { useAuth } from '../hooks/useAuth';
 
 const Suppliers = () => {
     const { data: suppliers, loading, error, forceSync } = useCachedData('suppliers', '/suppliers');
-    const { user } = useAuth(); // Get user role
+    const { user } = useAuth();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingSupplier, setEditingSupplier] = useState(null);
     const [deletingSupplier, setDeletingSupplier] = useState(null);

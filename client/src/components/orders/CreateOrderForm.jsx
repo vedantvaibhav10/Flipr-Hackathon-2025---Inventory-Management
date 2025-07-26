@@ -62,23 +62,21 @@ const CreateOrderForm = ({ onOrderCreated, onClose }) => {
             onOrderCreated();
             onClose();
         } catch (err) {
-            if (!err.response) { // Offline
+            if (!err.response) {
                 toast.success('Offline: Order saved locally, will sync later.');
                 const offlineId = `offline_${Date.now()}`;
 
-                // --- FIX: Save full objects for optimistic UI ---
                 const selectedSupplier = suppliers.find(s => s._id === formData.supplier);
                 const offlineOrder = {
                     ...orderPayload,
                     _id: offlineId,
-                    product: selectedProduct, // Save the full product object
-                    supplier: selectedSupplier, // Save the full supplier object
+                    product: selectedProduct,
+                    supplier: selectedSupplier,
                 };
 
                 await db.orders.add(offlineOrder);
                 await addToOutbox({ url: '/orders', method: 'post', data: orderPayload });
 
-                // Do not call onOrderCreated() here
                 onClose();
             } else {
                 const errorMessage = err.response?.data?.message || 'Failed to create order.';

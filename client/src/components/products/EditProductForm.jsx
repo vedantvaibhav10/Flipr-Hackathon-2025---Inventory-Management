@@ -79,13 +79,13 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
             onProductUpdated();
             onClose();
         } catch (err) {
-            if (!err.response) { // Offline
+            if (!err.response) { 
                 toast.success('Offline: Product update saved locally, will sync later.');
                 await db.products.update(product._id, productPayload);
                 await addToOutbox({
                     url: `/products/${product._id}`,
                     method: 'put',
-                    data: productPayload, // Note: FormData is not ideal for offline. Sending plain object.
+                    data: productPayload, 
                 });
                 onProductUpdated();
                 onClose();
@@ -121,7 +121,7 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
             onProductUpdated();
             setAdjustmentData({ quantity: '', actionType: 'RESTOCK', notes: '' });
         } catch (err) {
-            if (!err.response) { // Offline
+            if (!err.response) {
                 toast.error('Offline mode: Manual stock adjustments cannot be made offline.');
             } else {
                 const errorMessage = err.response?.data?.message || 'Failed to adjust stock.';

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import apiClient from '../api';
-import { useCachedData } from '../hooks/useCachedData'; // Import the hook
+import { useCachedData } from '../hooks/useCachedData';
 import { motion } from 'framer-motion';
 import { Loader2, FileText, ArrowUpCircle, ArrowDownCircle, ArrowRightCircle, AlertCircle, RotateCcw, WifiOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -24,7 +24,6 @@ const getActionDetails = (action) => {
 };
 
 const Reports = () => {
-    // Use the hook to manage inventory logs data
     const { data: logs, loading, error, forceSync } = useCachedData('inventoryLogs', '/inventory/logs');
 
     const handleExport = async () => {

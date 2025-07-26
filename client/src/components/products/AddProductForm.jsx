@@ -63,7 +63,6 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
         const productPayload = { ...formData };
 
         try {
-            // ONLINE PATH
             const productFormData = new FormData();
             Object.keys(productPayload).forEach(key => productFormData.append(key, productPayload[key]));
             if (imageFile) productFormData.append('image', imageFile);
@@ -72,25 +71,21 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success('Product created successfully!');
-            onProductAdded(); // Call the sync function ONLY when online
+            onProductAdded();
             onClose();
         } catch (err) {
-            if (!err.response) { // OFFLINE PATH
+            if (!err.response) {
                 toast.success('Offline: Product saved locally, will sync later.');
                 const offlineId = `offline_${Date.now()}`;
 
-                // Optimistic UI: Add to local DB immediately. useLiveQuery will update the UI.
                 await db.products.add({ ...productPayload, _id: offlineId });
 
-                // Add the plain JSON object to the outbox. The SyncManager will handle it.
                 await addToOutbox({
                     url: '/products',
                     method: 'post',
                     data: productPayload,
                 });
 
-                // DO NOT call onProductAdded(). Just close the modal.
-                // The useLiveQuery hook will automatically update the product list.
                 onClose();
             } else {
                 setError(err.response?.data?.message || 'Failed to create product.');

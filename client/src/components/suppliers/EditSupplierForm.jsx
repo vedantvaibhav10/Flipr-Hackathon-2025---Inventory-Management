@@ -36,7 +36,7 @@ const EditSupplierForm = ({ supplier, onSupplierUpdated, onClose }) => {
             onSupplierUpdated();
             onClose();
         } catch (err) {
-            if (!err.response) { // Offline
+            if (!err.response) {
                 toast.success('Offline: Supplier update saved locally, will sync later.');
                 await db.suppliers.update(supplier._id, formData);
                 await addToOutbox({

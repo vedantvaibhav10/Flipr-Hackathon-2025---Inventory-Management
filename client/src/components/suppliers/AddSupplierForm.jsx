@@ -21,15 +21,14 @@ const AddSupplierForm = ({ onSupplierAdded, onClose }) => {
         try {
             await apiClient.post('/suppliers', formData);
             toast.success('Supplier added successfully!');
-            onSupplierAdded(); // Correct for online
+            onSupplierAdded();
             onClose();
         } catch (err) {
-            if (!err.response) { // Offline
+            if (!err.response) {
                 toast.success('Offline: Supplier saved locally, will sync later.');
                 const offlineId = `offline_${Date.now()}`;
                 await db.suppliers.add({ ...formData, _id: offlineId });
                 await addToOutbox({ url: '/suppliers', method: 'post', data: formData });
-                // No sync call here
                 onClose();
             } else {
                 setError(err.response?.data?.message || 'Failed to add supplier.');

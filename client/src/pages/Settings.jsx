@@ -10,11 +10,10 @@ const Settings = () => {
     const handleManualBackup = async () => {
         toast.loading('Generating backup...');
         try {
-            // Fetch all data from every table in IndexedDB
             const products = await db.products.toArray();
             const suppliers = await db.suppliers.toArray();
             const orders = await db.orders.toArray();
-            const inventoryLogs = await db.inventoryLogs.toArray(); // Assuming you cache logs too
+            const inventoryLogs = await db.inventoryLogs.toArray();
 
             const backupData = {
                 version: 1,
@@ -27,7 +26,6 @@ const Settings = () => {
                 },
             };
 
-            // Create a downloadable file from the JSON data
             const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
