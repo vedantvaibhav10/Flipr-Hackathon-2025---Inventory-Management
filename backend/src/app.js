@@ -31,13 +31,14 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(passport.initialize());
 
 app.use(express.json());
 app.use(cookieParser());
 
 app.use('/health', healthRouter);
 app.use('/api/v1', mainRouter);
+
+app.use(passport.initialize());
 
 app.get('/', (req, res) => {
   res.status(200).json({
