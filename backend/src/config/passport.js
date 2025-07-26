@@ -6,7 +6,8 @@ const User = require('../models/user.model');
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/api/v1/auth/google/callback"
+    callbackURL: "/api/v1/auth/google/callback",
+    proxy: true
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
@@ -38,7 +39,8 @@ passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
     callbackURL: "/api/v1/auth/github/callback",
-    scope: ['user:email']
+    scope: ['user:email'],
+    proxy: true
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
