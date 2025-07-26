@@ -112,8 +112,7 @@ const updateProduct = async (req, res) => {
                     public_id: imageUploadResponse.public_id
                 }
                 console.log(`Image uploaded: ${product.image.url}`.blue);
-            }
-            else {
+            } else {
                 console.error(`Image upload failed: ${imageUploadResponse}`.red);
                 return res.status(500).json({
                     success: false,
@@ -122,15 +121,16 @@ const updateProduct = async (req, res) => {
             }
         }
 
-
         product.name = name || product.name;
         product.sku = sku || product.sku;
         product.category = category || product.category;
-        product.stockLevel = stockLevel !== undefined ? stockLevel : product.stockLevel;
-        product.threshold = threshold !== undefined ? threshold : product.threshold;
-        product.buyingPrice = buyingPrice || product.buyingPrice;
-        product.sellingPrice = sellingPrice || product.sellingPrice;
         product.expiryDate = expiryDate || product.expiryDate;
+
+        // FIX: Explicitly convert string inputs from the form to Numbers to prevent type errors.
+        product.stockLevel = stockLevel !== undefined ? Number(stockLevel) : product.stockLevel;
+        product.threshold = threshold !== undefined ? Number(threshold) : product.threshold;
+        product.buyingPrice = buyingPrice !== undefined ? Number(buyingPrice) : product.buyingPrice;
+        product.sellingPrice = sellingPrice !== undefined ? Number(sellingPrice) : product.sellingPrice;
 
         const updatedProduct = await product.save();
 

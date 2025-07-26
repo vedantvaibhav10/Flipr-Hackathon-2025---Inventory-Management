@@ -6,11 +6,12 @@ const openai = require('../services/openai.service');
 
 const updateStock = async (req, res) => {
     try {
-        const {productId, actionType} = req.body;
+        // FIX: Destructure 'notes' from the request body.
+        const { productId, actionType, notes } = req.body;
         const quantity = Number(req.body.quantity);
         const userId = req.user._id;
 
-        if(!productId || !actionType || !quantity || isNaN(quantity)) {
+        if (!productId || !actionType || !quantity || isNaN(quantity)) {
             return res.status(400).json({
                 success: false,
                 message: 'Product ID, action type, and a valid quantity are required.'
@@ -19,7 +20,7 @@ const updateStock = async (req, res) => {
 
         const product = await Product.findById(productId);
 
-        if(!product) {
+        if (!product) {
             return res.status(404).json({
                 success: false,
                 message: 'Product not found.'
@@ -28,8 +29,8 @@ const updateStock = async (req, res) => {
 
         let newStockLevel = product.stockLevel;
 
-        if (['SALE', 'DAMAGE', 'TRANSFER_OUT'].includes(actionType)){
-            if(product.stockLevel < quantity) {
+        if (['SALE', 'DAMAGE', 'TRANSFER_OUT'].includes(actionType)) {
+            if (product.stockLevel < quantity) {
                 return res.status(400).json({
                     success: false,
                     message: 'Not enough stock for this action.'
@@ -37,7 +38,7 @@ const updateStock = async (req, res) => {
             }
             newStockLevel -= quantity;
         }
-        else if (['RESTOCK', 'RETURN', 'TRANSFER_IN'].includes(actionType)){
+        else if (['RESTOCK', 'RETURN', 'TRANSFER_IN'].includes(actionType)) {
             newStockLevel += quantity;
         }
         else {
@@ -52,15 +53,17 @@ const updateStock = async (req, res) => {
 
         console.log(`Product stock updated: ${updatedProduct}`.blue);
 
-        const additionActions = ['RESTOCK', 'RETURN', 'TRANSFER_IN'];
-        const quantityChangeValue = additionActions.includes(actionType) ? quantity : -quantity;
+        const subtractionActions = ['SALE', 'DAMAGE', 'TRANSFER_OUT'];
+        const quantityChangeValue = subtractionActions.includes(actionType) ? -quantity : quantity;
 
         await InventoryLog.create({
             product: productId,
             user: userId,
             actionType,
-            quantityChangeValue,
+            // FIX: The model key is 'quantityChange', not 'quantityChangeValue'.
+            quantityChange: quantityChangeValue,
             newStockLevel: product.stockLevel,
+            // FIX: Use the 'notes' variable that is now correctly destructured.
             notes: notes || ''
         });
 
