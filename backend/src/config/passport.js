@@ -3,10 +3,14 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const GitHubStrategy = require('passport-github2').Strategy;
 const User = require('../models/user.model');
 
+const GOOGLE_CALLBACK_URL = "https://inventory-management-backend-j0w6.onrender.com/api/v1/auth/google/callback";
+const GITHUB_CALLBACK_URL = "https://inventory-management-backend-j0w6.onrender.com/api/v1/auth/github/callback";
+
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://inventory-management-backend-j0w6.onrender.com/api/v1/auth/google/callback",
+    callbackURL: GOOGLE_CALLBACK_URL,
+    proxy: true 
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
@@ -33,8 +37,9 @@ passport.use(new GoogleStrategy({
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: "https://inventory-management-backend-j0w6.onrender.com/api/v1/auth/github/callback",
-    scope: ['user:email']
+    callbackURL: GITHUB_CALLBACK_URL,
+    scope: ['user:email'],
+    proxy: true 
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
