@@ -19,17 +19,28 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
     });
     const [imageFile, setImageFile] = useState(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
-    const [adjustmentData, setAdjustmentData] = useState({ quantity: '', actionType: 'RESTOCK', notes: '' });
+
+    const [adjustmentData, setAdjustmentData] = useState({
+        quantity: '',
+        actionType: 'RESTOCK',
+        notes: ''
+    });
+
     const [adjustmentLoading, setAdjustmentLoading] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
         if (product) {
             setDetailsData({
-                name: product.name || '', sku: product.sku || '', category: product.category || '',
-                description: product.description || '', threshold: product.threshold ?? '',
-                buyingPrice: product.buyingPrice ?? '', sellingPrice: product.sellingPrice ?? '',
-                expiryDate: formatDateForInput(product.expiryDate), stockLevel: product.stockLevel ?? '',
+                name: product.name || '',
+                sku: product.sku || '',
+                category: product.category || '',
+                description: product.description || '',
+                threshold: product.threshold ?? '',
+                buyingPrice: product.buyingPrice ?? '',
+                sellingPrice: product.sellingPrice ?? '',
+                expiryDate: formatDateForInput(product.expiryDate),
+                stockLevel: product.stockLevel ?? '',
             });
         }
     }, [product]);
@@ -54,12 +65,16 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
         e.preventDefault();
         setDetailsLoading(true);
         setError('');
+
         const productPayload = { ...detailsData };
+        const productFormData = new FormData();
+        Object.keys(productPayload).forEach(key => productFormData.append(key, productPayload[key]));
+        if (imageFile) productFormData.append('image', imageFile);
+
         try {
-            const productFormData = new FormData();
-            Object.keys(productPayload).forEach(key => productFormData.append(key, productPayload[key]));
-            if (imageFile) productFormData.append('image', imageFile);
-            await apiClient.put(`/products/${product._id}`, productFormData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            const response = await apiClient.put(`/products/${product._id}`, productFormData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
             toast.success('Product details updated!');
             onProductUpdated();
             onClose();
@@ -67,7 +82,12 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
             if (!err.response) {
                 toast.success('Offline: Product update saved locally, will sync later.');
                 await db.products.update(product._id, productPayload);
-                await addToOutbox({ url: `/products/${product._id}/sync`, method: 'put', data: productPayload });
+                await addToOutbox({
+                    url: `/products/${product._id}`,
+                    method: 'put',
+                    data: productPayload,
+                });
+                onProductUpdated();
                 onClose();
             } else {
                 const errorMessage = err.response?.data?.message || 'Failed to update details.';
@@ -87,14 +107,21 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
         }
         setAdjustmentLoading(true);
         setError('');
-        const payload = { productId: product._id, quantity: qty, actionType: adjustmentData.actionType, notes: adjustmentData.notes };
+
+        const payload = {
+            productId: product._id,
+            quantity: qty,
+            actionType: adjustmentData.actionType,
+            notes: adjustmentData.notes
+        };
+
         try {
-            await apiClient.post(`/inventory/update`, payload);
+            const response = await apiClient.post(`/inventory/update`, payload);
             toast.success('Stock adjusted successfully!');
             onProductUpdated();
             setAdjustmentData({ quantity: '', actionType: 'RESTOCK', notes: '' });
         } catch (err) {
-            if (!err.response) {
+            if (!err.response) { // Offline
                 toast.error('Offline mode: Manual stock adjustments cannot be made offline.');
             } else {
                 const errorMessage = err.response?.data?.message || 'Failed to adjust stock.';

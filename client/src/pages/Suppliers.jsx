@@ -10,11 +10,9 @@ import AddSupplierForm from '../components/suppliers/AddSupplierForm';
 import EditSupplierForm from '../components/suppliers/EditSupplierForm';
 import { db } from '../db';
 import { addToOutbox } from '../services/syncManager';
-import { useAuth } from '../hooks/useAuth';
 
 const Suppliers = () => {
     const { data: suppliers, loading, error, forceSync } = useCachedData('suppliers', '/suppliers');
-    const { user } = useAuth();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingSupplier, setEditingSupplier] = useState(null);
     const [deletingSupplier, setDeletingSupplier] = useState(null);
@@ -62,11 +60,9 @@ const Suppliers = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-text-primary">Suppliers</h1>
-                {user.role === 'Admin' && (
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg shadow-md hover:bg-accent/90 transition-colors">
-                        <PlusCircle size={20} /> Create Supplier
-                    </motion.button>
-                )}
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg shadow-md hover:bg-accent/90 transition-colors">
+                    <PlusCircle size={20} /> Create Supplier
+                </motion.button>
             </div>
 
             {error && (
@@ -85,7 +81,7 @@ const Suppliers = () => {
                                 <th className="p-4 font-semibold text-text-secondary">Name</th>
                                 <th className="p-4 font-semibold text-text-secondary">Contact Number</th>
                                 <th className="p-4 font-semibold text-text-secondary">Email</th>
-                                {user.role === 'Admin' && <th className="p-4 font-semibold text-text-secondary text-center">Actions</th>}
+                                <th className="p-4 font-semibold text-text-secondary text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -94,17 +90,15 @@ const Suppliers = () => {
                                     <td className="p-4 text-text-primary font-medium">{supplier.name}</td>
                                     <td className="p-4 text-text-secondary">{supplier.contactNumber || '-'}</td>
                                     <td className="p-4 text-text-secondary">{supplier.email || '-'}</td>
-                                    {user.role === 'Admin' && (
-                                        <td className="p-4 text-center">
-                                            <div className="flex justify-center items-center gap-2">
-                                                <button onClick={() => handleSupplierAnalysis(supplier._id, supplier.name)} title="Analyze Supplier Performance" className="p-2 text-text-secondary hover:text-blue-400 transition-colors">
-                                                    <BarChart size={18} />
-                                                </button>
-                                                <button onClick={() => setEditingSupplier(supplier)} className="p-2 text-text-secondary hover:text-accent transition-colors"><Edit size={18} /></button>
-                                                <button onClick={() => setDeletingSupplier(supplier)} className="p-2 text-text-secondary hover:text-danger transition-colors"><Trash2 size={18} /></button>
-                                            </div>
-                                        </td>
-                                    )}
+                                    <td className="p-4 text-center">
+                                        <div className="flex justify-center items-center gap-2">
+                                            <button onClick={() => handleSupplierAnalysis(supplier._id, supplier.name)} title="Analyze Supplier Performance" className="p-2 text-text-secondary hover:text-blue-400 transition-colors">
+                                                <BarChart size={18} />
+                                            </button>
+                                            <button onClick={() => setEditingSupplier(supplier)} className="p-2 text-text-secondary hover:text-accent transition-colors"><Edit size={18} /></button>
+                                            <button onClick={() => setDeletingSupplier(supplier)} className="p-2 text-text-secondary hover:text-danger transition-colors"><Trash2 size={18} /></button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

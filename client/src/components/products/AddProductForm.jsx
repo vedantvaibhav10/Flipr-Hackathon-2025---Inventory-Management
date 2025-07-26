@@ -19,7 +19,7 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
     const [suggestedCategory, setSuggestedCategory] = useState('');
 
     const suggestCategory = useCallback(async (productName) => {
-        if (productName.length > 3 && navigator.onLine) {
+        if (productName.length > 3) {
             try {
                 const res = await apiClient.post('/products/suggest-category', { name: productName });
                 setSuggestedCategory(res.data.suggestedCategory);
@@ -36,8 +36,14 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
         return () => clearTimeout(debounce);
     }, [formData.name, suggestCategory]);
 
-    const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    const handleFileChange = (e) => setImageFile(e.target.files[0]);
+
+    const handleChange = (e) => {
+        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const handleFileChange = (e) => {
+        setImageFile(e.target.files[0]);
+    };
 
     const handleGenerateDescription = async () => {
         if (!formData.name || !formData.category) {
@@ -55,39 +61,44 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
         }
     };
 
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
-        const productPayload = { ...formData };
+        const productData = new FormData();
+        Object.keys(formData).forEach(key => productData.append(key, formData[key]));
+        if (imageFile) productData.append('image', imageFile);
 
         try {
-            // ONLINE PATH
-            const productFormData = new FormData();
-            Object.keys(productPayload).forEach(key => productFormData.append(key, productPayload[key]));
-            if (imageFile) productFormData.append('image', imageFile);
-
-            await apiClient.post('/products', productFormData, {
+            const response = await apiClient.post('/products', productData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success('Product created successfully!');
-            onProductAdded(); // Call sync function ONLY when online
+            onProductAdded();
             onClose();
         } catch (err) {
-            if (!err.response) { // OFFLINE PATH
-                toast.success('Offline: Product saved locally, will sync later.');
-                const offlineId = `offline_${Date.now()}`;
+            if (!err.response) {
+                toast.success('You are offline. Product saved locally and will sync later.');
 
-                await db.products.add({ ...productPayload, _id: offlineId });
+                const offlineProduct = {
+                    ...formData,
+                    _id: `offline_${Date.now()}`,
+                    stockLevel: Number(formData.stockLevel),
+                    threshold: Number(formData.threshold),
+                    buyingPrice: Number(formData.buyingPrice),
+                    sellingPrice: Number(formData.sellingPrice),
+                };
+
+                await db.products.add(offlineProduct);
 
                 await addToOutbox({
-                    url: '/products/sync', // Use the dedicated sync route
+                    url: '/products',
                     method: 'post',
-                    data: productPayload,
+                    data: productData,
                 });
-
-                onClose(); // DO NOT call onProductAdded() here
+                onClose();
             } else {
                 setError(err.response?.data?.message || 'Failed to create product.');
             }

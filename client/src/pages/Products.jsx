@@ -28,16 +28,21 @@ const Products = () => {
         try {
             await apiClient.delete(`/products/${deletingProduct._id}`);
             await db.products.delete(deletingProduct._id);
-            toast.success("Product deleted!");
+            toast.success('Product deleted successfully!');
             setDeletingProduct(null);
         } catch (err) {
             if (!err.response && !deletingProduct._id.startsWith('offline_')) {
-                toast.success('Offline: Delete action saved, will sync later.');
+                toast.success('You are offline. Delete action saved locally and will sync later.');
+
                 await db.products.delete(deletingProduct._id);
-                await addToOutbox({ url: `/products/${deletingProduct._id}`, method: 'delete' });
+
+                await addToOutbox({
+                    url: `/products/${deletingProduct._id}`,
+                    method: 'delete',
+                });
                 setDeletingProduct(null);
             } else {
-                toast.error("Failed to delete product.");
+                toast.error('Failed to delete product. It might be linked to an order.');
             }
         } finally {
             setActionLoading(false);
