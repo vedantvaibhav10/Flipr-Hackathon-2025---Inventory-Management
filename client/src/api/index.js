@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: 'https://inventory-management-backend-gmik.onrender.com/api/v1',
+    baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/v1`,
     withCredentials: true,
 });
 

@@ -14,10 +14,9 @@ const app = express();
 connectDB();
 configureCloudinary();
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-];
+const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : ['http://localhost:5173', 'http://localhost:3000'];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -29,6 +28,7 @@ app.use(cors({
   },
   credentials: true,
 }));
+
 
 
 app.use(express.json());
