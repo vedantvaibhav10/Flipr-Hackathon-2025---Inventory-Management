@@ -11,8 +11,7 @@ const getReorderSuggestion = async (req, res) => {
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found.' });
         }
-
-        // Find recent sales
+        
         const salesLogs = await InventoryLog.find({ product: productId, actionType: 'SALE' }).sort({ createdAt: -1 }).limit(50);
         const totalSold = salesLogs.reduce((acc, log) => acc + Math.abs(log.quantityChange), 0);
 

@@ -9,7 +9,6 @@ const authorize = require('../middleware/role.middleware');
 
 const router = Router();
 
-// All AI routes are protected and for Admins only
 router.use(protect, authorize('Admin'));
 
 router.get('/reorder-suggestion/:productId', getReorderSuggestion);
