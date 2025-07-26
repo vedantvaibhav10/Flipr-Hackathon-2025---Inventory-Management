@@ -4,8 +4,11 @@ import apiClient from '../../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, XCircle, Server, Database, Cloud, ChevronUp, ChevronDown, WifiOff, Loader2 } from 'lucide-react';
 
+const rawApiUrl = import.meta.env.VITE_API_BASE_URL || 'https://inventory-management-backend-gmik.onrender.com';
+const healthCheckBaseUrl = new URL(rawApiUrl).origin;
+
 const healthClient = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://inventory-management-backend-gmik.onrender.com',
+    baseURL: healthCheckBaseUrl,
 });
 
 const apiEndpointsToMonitor = [
@@ -43,7 +46,7 @@ const HealthStatusBar = () => {
 
     useEffect(() => {
         runAllChecks();
-        const intervalId = setInterval(runAllChecks, 2000);
+        const intervalId = setInterval(runAllChecks, 30000);
         return () => clearInterval(intervalId);
     }, [runAllChecks]);
 
