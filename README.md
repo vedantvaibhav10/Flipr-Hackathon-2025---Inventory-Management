@@ -14,6 +14,21 @@ Admin Password: 123456
 Staff Email: staff@example.com
 Staff Password: 123456
 
+v1 Demo Video - 
+
+https://github.com/user-attachments/assets/b74e0e9c-7cce-4335-953e-b22aa5ee2ebf
+
+v2 Screenshots -
+
+<img width="1919" height="899" alt="Screenshot 2025-07-26 215639" src="https://github.com/user-attachments/assets/cf5faf41-91f1-403a-a8ca-74f616844a84" />
+<img width="1919" height="903" alt="Screenshot 2025-07-26 215624" src="https://github.com/user-attachments/assets/bc3872a7-1e33-465e-8536-52eb0066b20f" />
+<img width="1919" height="910" alt="Screenshot 2025-07-26 215612" src="https://github.com/user-attachments/assets/7e6eb673-13fe-402a-9cca-5ab98f1fc520" />
+<img width="1919" height="901" alt="Screenshot 2025-07-26 215519" src="https://github.com/user-attachments/assets/dbf74b98-72f7-49b5-a708-2730e5e1af23" />
+<img width="1919" height="902" alt="Screenshot 2025-07-26 215511" src="https://github.com/user-attachments/assets/c8e8b992-1f27-4c86-932b-1a532ccb439a" />
+<img width="1919" height="899" alt="Screenshot 2025-07-26 215459" src="https://github.com/user-attachments/assets/e1976a94-7936-4599-ba8b-60c745cc2412" />
+<img width="1919" height="903" alt="Screenshot 2025-07-26 215448" src="https://github.com/user-attachments/assets/12375abb-7754-4faa-9d5f-132d9b70d87c" />
+
+
 ## 🌟 Live Demo
 
 - **Frontend:** [https://inventory-management-topaz-tau.vercel.app/](https://inventory-management-topaz-tau.vercel.app/)
