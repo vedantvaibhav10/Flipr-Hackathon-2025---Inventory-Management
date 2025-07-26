@@ -194,10 +194,30 @@ const getMe = async (req, res) => {
     });
 };
 
+const oauthCallback = (req, res) => {
+    const user = req.user;
+
+    const token = jwt.sign(
+        { id: user._id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    const options = {
+        httpOnly: true,
+        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000),
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'None'
+    };
+
+    res.cookie('token', token, options).redirect(process.env.FRONTEND_URL || 'http://localhost:5173');
+};
+
 module.exports = {
     registerUser,
     verifyOtp,
     loginUser,
     logoutUser,
-    getMe
+    getMe,
+    oauthCallback
 };
