@@ -27,7 +27,7 @@ const LowStockTable = () => {
         <div className="bg-primary p-6 rounded-lg border border-border h-full">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-text-primary">Low Quantity Stock</h3>
-                <Link to="/products" className="text-sm text-accent hover:underline">See All</Link>
+                <Link to="/inventory" className="text-sm text-accent hover:underline">See All</Link>
             </div>
             {loading ? (
                 <div className="flex justify-center items-center h-48">
