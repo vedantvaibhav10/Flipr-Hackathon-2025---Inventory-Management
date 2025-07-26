@@ -55,32 +55,52 @@ const updateOrder = async (req, res) => {
         const oldStatus = order.status;
         const newStatus = req.body.status;
 
-        order.status = newStatus || order.status;
-
-        const updatedOrder = await order.save();
-
-        if (newStatus === 'Delivered' && oldStatus !== 'Delivered') {
-            const product = await Product.findById(order.product);
-            if (product) {
-                product.stockLevel += order.quantity;
-                await product.save();
-
-                await InventoryLog.create({
-                    product: order.product,
-                    user: req.user._id,
-                    actionType: 'RESTOCK',
-                    quantityChange: order.quantity,
-                    newStockLevel: product.stockLevel,
-                    notes: `Restock from order ID: ${order._id}`
-                });
-            }
+        if (oldStatus === newStatus) {
+            return res.status(200).json({ success: true, data: order }); // No change needed
         }
 
-        const populatedOrder = await Order.findById(updatedOrder._id)
+        const product = await Product.findById(order.product);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product associated with order not found' });
+        }
+        
+        if (newStatus === 'Delivered' && oldStatus !== 'Delivered') {
+            product.stockLevel += order.quantity;
+            await InventoryLog.create({
+                product: order.product,
+                user: req.user._id,
+                actionType: 'RESTOCK',
+                quantityChange: order.quantity,
+                newStockLevel: product.stockLevel,
+                notes: `Stock received from order ID: ${order._id}`
+            });
+        }
+    
+        if (oldStatus === 'Delivered' && ['Cancelled', 'Returned'].includes(newStatus)) {
+            if (product.stockLevel < order.quantity) {
+                return res.status(400).json({ success: false, message: `Cannot return stock for ${product.name}. Current stock is lower than return quantity.` });
+            }
+            product.stockLevel -= order.quantity;
+            await InventoryLog.create({
+                product: order.product,
+                user: req.user._id,
+                actionType: 'TRANSFER',
+                quantityChange: -order.quantity,
+                newStockLevel: product.stockLevel,
+                notes: `Stock returned to supplier from order ID: ${order._id}`
+            });
+        }
+
+        order.status = newStatus;
+        await product.save();
+        await order.save();
+
+        const populatedOrder = await Order.findById(order._id)
             .populate('product', 'name sku')
             .populate('supplier', 'name');
 
         res.status(200).json({ success: true, data: populatedOrder });
+
     } catch (error) {
         console.error(`Error updating order: ${error.message}`.red);
         res.status(500).json({ success: false, message: 'Server error' });
