@@ -2,13 +2,17 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 
 const protect = async (req, res, next) => {
+    if (req.method === 'OPTIONS') {
+        return next();
+    }
+
     let token;
 
-    if(req.cookies && req.cookies.token) {
+    if (req.cookies && req.cookies.token) {
         token = req.cookies.token;
     }
 
-    if(!token) {
+    if (!token) {
         return res.status(401).json({
             success: false,
             message: "Not authorized, no token provided."
@@ -20,14 +24,12 @@ const protect = async (req, res, next) => {
 
         req.user = await User.findById(decoded.id).select('-password');
 
-        if(!req.user) {
+        if (!req.user) {
             return res.status(401).json({
                 success: false,
                 message: "Not Authorized, user not found."
             });
         }
-
-        console.log(`${req.user}`.blue);
 
         next();
     }
