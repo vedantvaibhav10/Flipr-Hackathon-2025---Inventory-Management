@@ -1,9 +1,8 @@
 const express = require('express');
-const { registerUser, verifyOtp, loginUser, logoutUser, getMe } = require('../controllers/auth.controller');
+const passport = require('passport');
+const { registerUser, verifyOtp, loginUser, logoutUser, getMe, oauthCallback } = require('../controllers/auth.controller');
 const protect = require('../middleware/auth.middleware');
 const router = express.Router();
-const passport = require('passport');
-const { oauthCallback } = require('../controllers/auth.controller');
 
 router.post('/register', registerUser);
 router.post('/verify-otp', verifyOtp);
@@ -16,6 +15,5 @@ router.get('/google/callback', passport.authenticate('google', { session: false,
 
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
 router.get('/github/callback', passport.authenticate('github', { session: false, failureRedirect: '/login' }), oauthCallback);
-
 
 module.exports = router;
