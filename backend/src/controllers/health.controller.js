@@ -36,10 +36,20 @@ const checkHealth = async (req, res) => {
         timestamp: new Date().toISOString(),
     };
 
+    if (!isHealthy) {
+        console.error('Health check failed. Detailed status:'.red);
+        if (services.database.status !== 'ok') {
+            console.error('- Database check failed:'.yellow, dbCheck.message);
+        }
+        if (services.cloudinary.status !== 'ok') {
+            console.error('- Cloudinary check failed:'.yellow, cloudinaryCheck.message);
+        }
+    }
+
     const statusCode = isHealthy ? 200 : 503;
 
     console.log(`Health check performed. Status: ${isHealthy ? 'OK'.green : 'ERROR'.red}`);
-    
+
     return res.status(statusCode).json({
         success: isHealthy,
         overall: overallStatus,
