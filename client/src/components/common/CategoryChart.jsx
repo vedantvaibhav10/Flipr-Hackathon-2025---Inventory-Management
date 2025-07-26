@@ -2,7 +2,6 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 
-// A vibrant, beautiful color palette for our charts
 const CHART_COLORS = ['#58A6FF', '#3FB950', '#F778BA', '#A371F7', '#E8C547'];
 
 const CategoryChart = ({ data, loading }) => {
@@ -12,6 +11,18 @@ const CategoryChart = ({ data, loading }) => {
                 <Loader2 className="animate-spin h-8 w-8" />
             </div>
         );
+    }
+
+    if (!data || data.length === 0) {
+        return (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-primary p-6 rounded-lg border border-border h-80 flex items-center justify-center"
+            >
+                <h3 className="text-text-secondary">No category data to display.</h3>
+            </motion.div>
+        )
     }
 
     const CustomTooltip = ({ active, payload, label }) => {

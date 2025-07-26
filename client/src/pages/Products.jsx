@@ -6,6 +6,7 @@ import Modal from '../components/common/Modal';
 import AddProductForm from '../components/products/AddProductForm';
 import EditProductForm from '../components/products/EditProductForm';
 import DeleteConfirmationModal from '../components/common/DeleteConfirmationModal';
+import { toast } from 'react-hot-toast';
 
 const Products = () => {
     const [products, setProducts] = useState([]);
@@ -14,8 +15,8 @@ const Products = () => {
 
     // State for modals
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState(null); // Holds the product being edited
-    const [deletingProduct, setDeletingProduct] = useState(null); // Holds the product being deleted
+    const [editingProduct, setEditingProduct] = useState(null); // Holds the product object being edited
+    const [deletingProduct, setDeletingProduct] = useState(null); // Holds the product object being deleted
     const [actionLoading, setActionLoading] = useState(false);
 
     const fetchProducts = async () => {
@@ -25,6 +26,7 @@ const Products = () => {
             setProducts(response.data.data);
         } catch (err) {
             setError('Failed to fetch products.');
+            toast.error('Failed to fetch products.');
         } finally {
             setLoading(false);
         }
@@ -34,25 +36,28 @@ const Products = () => {
         fetchProducts();
     }, []);
 
+    // Callback for when a new product is successfully added
     const handleProductAdded = (newProduct) => {
         setProducts(prev => [newProduct, ...prev]);
     };
 
+    // Callback for when a product is successfully updated
     const handleProductUpdated = (updatedProduct) => {
         setProducts(prev => prev.map(p => p._id === updatedProduct._id ? updatedProduct : p));
     };
 
+    // Handler for the delete confirmation
     const handleDelete = async () => {
         if (!deletingProduct) return;
         setActionLoading(true);
         try {
             await apiClient.delete(`/products/${deletingProduct._id}`);
             setProducts(prev => prev.filter(p => p._id !== deletingProduct._id));
+            toast.success('Product deleted successfully!');
             setDeletingProduct(null); // Close modal on success
         } catch (err) {
-            // You could add a toast notification here for better UX
+            toast.error('Failed to delete product.');
             console.error('Failed to delete product', err);
-            // Optionally set an error message to display to the user
         } finally {
             setActionLoading(false);
         }
@@ -63,7 +68,7 @@ const Products = () => {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-text-primary">Products</h1>
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg shadow-md hover:bg-accent/90 transition-colors">
-                    <PlusCircle size={20} /> Create Product
+                    <PlusCircle size={20} /> Add Product
                 </motion.button>
             </div>
 
@@ -80,13 +85,16 @@ const Products = () => {
                                 <th className="p-4 font-semibold text-text-secondary">SKU</th>
                                 <th className="p-4 font-semibold text-text-secondary">Category</th>
                                 <th className="p-4 font-semibold text-text-secondary text-center">Stock</th>
+                                <th className="p-4 font-semibold text-text-secondary text-center">Price</th>
                                 <th className="p-4 font-semibold text-text-secondary text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {products.map((product) => (
-                                <tr key={product._id} className="border-b border-border hover:bg-secondary transition-colors">
-                                    <td className="p-4"><img src={product.image?.url || `https://placehold.co/40x40/161B22/C9D1D9?text=${product.name.charAt(0)}`} alt={product.name} className="w-10 h-10 rounded-md object-cover" /></td>
+                                <tr key={product._id} className="border-b border-border hover:bg-secondary/50 transition-colors">
+                                    <td className="p-4">
+                                        <img src={product.image?.url || `https://placehold.co/40x40/1C222B/9DA3AE?text=${product.name.charAt(0)}`} alt={product.name} className="w-10 h-10 rounded-md object-cover" />
+                                    </td>
                                     <td className="p-4 text-text-primary font-medium">{product.name}</td>
                                     <td className="p-4 text-text-secondary">{product.sku}</td>
                                     <td className="p-4 text-text-secondary">{product.category}</td>
@@ -95,10 +103,11 @@ const Products = () => {
                                             {product.stockLevel}
                                         </span>
                                     </td>
+                                    <td className="p-4 text-text-primary text-center">${product.sellingPrice.toFixed(2)}</td>
                                     <td className="p-4 text-center">
-                                        <div className="flex justify-center gap-2">
-                                            <button onClick={() => setEditingProduct(product)} className="p-2 text-text-secondary hover:text-accent"><Edit size={18} /></button>
-                                            <button onClick={() => setDeletingProduct(product)} className="p-2 text-text-secondary hover:text-danger"><Trash2 size={18} /></button>
+                                        <div className="flex justify-center items-center gap-2">
+                                            <button onClick={() => setEditingProduct(product)} className="p-2 text-text-secondary hover:text-accent transition-colors"><Edit size={18} /></button>
+                                            <button onClick={() => setDeletingProduct(product)} className="p-2 text-text-secondary hover:text-danger transition-colors"><Trash2 size={18} /></button>
                                         </div>
                                     </td>
                                 </tr>

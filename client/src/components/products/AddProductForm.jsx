@@ -9,8 +9,11 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
         name: '',
         sku: '',
         category: '',
-        stockLevel: 0,
-        threshold: 10,
+        stockLevel: '',
+        threshold: '',
+        buyingPrice: '',
+        sellingPrice: '',
+        expiryDate: '',
     });
     const [imageFile, setImageFile] = useState(null);
     const [error, setError] = useState('');
@@ -31,9 +34,15 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
         setLoading(true);
 
         const productData = new FormData();
+        // Append all form data fields
         Object.keys(formData).forEach(key => {
+            // Ensure we don't send an empty expiry date if it's not set
+            if (key === 'expiryDate' && !formData[key]) {
+                return;
+            }
             productData.append(key, formData[key]);
         });
+
         if (imageFile) {
             productData.append('image', imageFile);
         }
@@ -42,8 +51,8 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
             const response = await apiClient.post('/products', productData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            onProductAdded(response.data.data); // Pass the new product back to the parent
-            onClose(); // Close the modal
+            onProductAdded(response.data.data);
+            onClose();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create product.');
         } finally {
@@ -53,11 +62,14 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField label="Product Name" id="name" value={formData.name} onChange={handleChange} required />
-            <FormField label="SKU" id="sku" value={formData.sku} onChange={handleChange} required />
-            <FormField label="Category" id="category" value={formData.category} onChange={handleChange} required />
-            <FormField label="Stock Level" id="stockLevel" type="number" value={formData.stockLevel} onChange={handleChange} required />
-            <FormField label="Low Stock Threshold" id="threshold" type="number" value={formData.threshold} onChange={handleChange} required />
+            <FormField label="Product Name" id="name" name="name" value={formData.name} onChange={handleChange} required />
+            <FormField label="SKU" id="sku" name="sku" value={formData.sku} onChange={handleChange} required />
+            <FormField label="Category" id="category" name="category" value={formData.category} onChange={handleChange} required />
+            <FormField label="Stock Level" id="stockLevel" name="stockLevel" type="number" value={formData.stockLevel} onChange={handleChange} required />
+            <FormField label="Buying Price" id="buyingPrice" name="buyingPrice" type="number" step="0.01" value={formData.buyingPrice} onChange={handleChange} required />
+            <FormField label="Selling Price" id="sellingPrice" name="sellingPrice" type="number" step="0.01" value={formData.sellingPrice} onChange={handleChange} required />
+            <FormField label="Low Stock Threshold" id="threshold" name="threshold" type="number" value={formData.threshold} onChange={handleChange} required />
+            <FormField label="Expiry Date" id="expiryDate" name="expiryDate" type="date" value={formData.expiryDate} onChange={handleChange} />
 
             <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Product Image</label>

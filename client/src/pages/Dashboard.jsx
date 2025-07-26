@@ -15,7 +15,9 @@ const Dashboard = () => {
         const fetchSummary = async () => {
             try {
                 const response = await apiClient.get('/reports/summary');
+                console.log('API Response:', response.data);
                 setStats(response.data.data);
+                console.log('State after setting:', response.data.data);
             } catch (err) {
                 setError('Failed to fetch dashboard data.');
             } finally {

@@ -48,3 +48,28 @@
   .border-primary { border-color: var(--border); }
   .border-accent { border-color: var(--accent); }
 }
+
+@layer components {
+    /* Style for standard text/number/date input fields */
+    .input-field {
+        @apply mt-1 block w-full px-3 py-2 bg-background border border-slate-600 rounded-md text-sm shadow-sm placeholder-slate-500
+        focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent
+        disabled:bg-slate-800 disabled:text-slate-400 disabled:border-slate-700;
+    }
+
+    /* FIX: Add a dedicated style for select/dropdown fields */
+    .select-field {
+        @apply mt-1 block w-full pl-3 pr-10 py-2 bg-background border border-slate-600 rounded-md text-sm shadow-sm appearance-none
+        focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent;
+    }
+    
+    .input-field::-webkit-calendar-picker-indicator {
+        @apply filter invert opacity-70 transition-opacity hover:opacity-100 cursor-pointer;
+    }
+
+    .form-label {
+        @apply block text-sm font-medium text-slate-300;
+    }
+
+    /* ... other styles like .btn-primary, etc. ... */
+}
