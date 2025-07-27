@@ -225,11 +225,25 @@ const suggestCategory = async (req, res) => {
     }
 };
 
+const getProductByBarcode = async (req, res) => {
+    try {
+        const { barcode } = req.params;
+        const product = await Product.findOne({ barcode });
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product with this barcode not found.' });
+        }
+        res.status(200).json({ success: true, data: product });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
     updateProduct,
     deleteProduct,
     generateDescription,
-    suggestCategory
+    suggestCategory,
+    getProductByBarcode
 }

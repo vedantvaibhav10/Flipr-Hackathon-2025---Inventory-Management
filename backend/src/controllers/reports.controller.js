@@ -7,6 +7,11 @@ const Order = require('../models/order.model');
 
 const getDashboardSummary = async (req, res) => {
     try {
+        const { startDate, endDate } = req.query;
+        const dateFilter = {};
+        if (startDate && endDate) {
+            dateFilter.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        }
         const productStats = await Product.aggregate([
             {
                 $facet: {

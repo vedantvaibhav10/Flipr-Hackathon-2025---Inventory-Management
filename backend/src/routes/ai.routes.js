@@ -3,7 +3,8 @@ const {
     getReorderSuggestion,
     getSupplierAnalysis,
     getPricingSuggestion,
-    handleChatQuery
+    handleChatQuery,
+    handleNaturalLanguageSearch
 } = require('../controllers/ai.controller');
 const protect = require('../middleware/auth.middleware');
 const authorize = require('../middleware/role.middleware');
@@ -17,5 +18,7 @@ router.get('/supplier-analysis/:supplierId', getSupplierAnalysis);
 router.get('/pricing-suggestion/:productId', getPricingSuggestion);
 
 router.post('/chatbot', handleChatQuery);
+
+router.post('/search', handleNaturalLanguageSearch);
 
 module.exports = router;

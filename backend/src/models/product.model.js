@@ -13,6 +13,11 @@ const productSchema = new mongoose.Schema({
         unique: true,
         trim: true,
     },
+    barcode: {
+        type: String,
+        unique: true,
+        sparse: true,
+    },
     description: {
         type: String,
         trim: true,
