@@ -168,14 +168,28 @@ const handleNaturalLanguageSearch = async (req, res) => {
         let results = [];
         if (aiResponse.collection === 'products') {
             const mongoQuery = {};
-            if (aiResponse.filters.category) mongoQuery.category = { $regex: aiResponse.filters.category, $options: 'i' };
-            if (aiResponse.filters.name) mongoQuery.name = { $regex: aiResponse.filters.name, $options: 'i' };
-            if (aiResponse.filters.stockStatus === 'low') mongoQuery.$expr = { $lt: ["$stockLevel", "$threshold"] };
+
+            if (aiResponse.filters) {
+                if (aiResponse.filters.category && typeof aiResponse.filters.category === 'string') {
+                    mongoQuery.category = { $regex: aiResponse.filters.category, $options: 'i' };
+                }
+                if (aiResponse.filters.name && typeof aiResponse.filters.name === 'string') {
+                    mongoQuery.name = { $regex: aiResponse.filters.name, $options: 'i' };
+                }
+                if (aiResponse.filters.stockStatus === 'low') {
+                    mongoQuery.$expr = { $lt: ["$stockLevel", "$threshold"] };
+                }
+                if (aiResponse.filters.stockStatus === 'healthy') {
+                    mongoQuery.$expr = { $gte: ["$stockLevel", "$threshold"] };
+                }
+            }
 
             results = await Product.find(mongoQuery).limit(10);
         } else if (aiResponse.collection === 'suppliers') {
             const mongoQuery = {};
-            if (aiResponse.filters.name) mongoQuery.name = { $regex: aiResponse.filters.name, $options: 'i' };
+            if (aiResponse.filters && aiResponse.filters.name && typeof aiResponse.filters.name === 'string') {
+                mongoQuery.name = { $regex: aiResponse.filters.name, $options: 'i' };
+            }
             results = await Supplier.find(mongoQuery).limit(10);
         }
 

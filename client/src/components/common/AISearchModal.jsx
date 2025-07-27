@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Loader2, Package, Users } from 'lucide-react';
 import apiClient from '../../api';
@@ -62,6 +62,13 @@ const AISearchModal = ({ isOpen, onClose }) => {
                                 className="w-full bg-transparent focus:outline-none text-lg text-text-primary"
                                 autoFocus
                             />
+                            <button
+                                type="submit"
+                                className="px-4 py-1.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center w-24"
+                                disabled={loading || query.trim().length < 3}
+                            >
+                                {loading ? <Loader2 className="animate-spin" size={20} /> : 'Search'}
+                            </button>
                             <button type="button" onClick={handleClose} className="text-text-secondary hover:text-text-primary">
                                 <X />
                             </button>
