@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { UserPlus, Loader2 } from 'lucide-react';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://inventory-management-backend-gmik.onrender.com';
 
 const Register = () => {
     const [name, setName] = useState('');
@@ -43,11 +43,13 @@ const Register = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                    <a href={`${API_URL}/api/v1/auth/google`} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-secondary border border-border rounded-md hover:bg-secondary/80 transition-colors">
-                        <FaGoogle /> Sign up with Google
+                    <a href={`${API_URL}/api/v1/auth/google`} className="flex-1 flex items-center justify-center gap-3 px-4 py-2 bg-secondary border border-border rounded-md hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-colors duration-300">
+                        <FaGoogle />
+                        <span className="font-medium">Sign up with Google</span>
                     </a>
-                    <a href={`${API_URL}/api/v1/auth/github`} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-secondary border border-border rounded-md hover:bg-secondary/80 transition-colors">
-                        <FaGithub /> Sign up with GitHub
+                    <a href={`${API_URL}/api/v1/auth/github`} className="flex-1 flex items-center justify-center gap-3 px-4 py-2 bg-secondary border border-border rounded-md hover:bg-gray-500/10 hover:border-gray-500/30 hover:text-gray-300 transition-colors duration-300">
+                        <FaGithub />
+                        <span className="font-medium">Sign up with GitHub</span>
                     </a>
                 </div>
 
