@@ -2,6 +2,10 @@ const Product = require('../models/product.model');
 const colors = require('colors');
 const { uploadOnCloudinary, deleteFromCloudinary } = require('../utils/cloudinary.util');
 const openai = require('../services/openai.service');
+const { BrowserBarcodeReader, NotFoundException } = require('@zxing/library');
+const jimp = require('jimp');
+const fs = require('fs');
+
 
 const createProduct = async (req, res) => {
     try {
@@ -241,6 +245,36 @@ const getProductByBarcode = async (req, res) => {
     }
 };
 
+const decodeBarcodeImage = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No barcode image uploaded.' });
+    }
+
+    const imagePath = req.file.path;
+    try {
+        const image = await jimp.read(imagePath);
+        const rawImageData = {
+            data: new Uint8ClampedArray(image.bitmap.data),
+            width: image.bitmap.width,
+            height: image.bitmap.height,
+        };
+
+        const codeReader = new BrowserBarcodeReader();
+        const result = codeReader.decodeFromImageData(rawImageData);
+
+        fs.unlinkSync(imagePath);
+
+        res.status(200).json({ success: true, barcode: result.getText() });
+    } catch (error) {
+        fs.unlinkSync(imagePath);
+        if (error instanceof NotFoundException) {
+            return res.status(404).json({ success: false, message: 'No barcode could be found in the image.' });
+        }
+        console.error('Error decoding barcode:', error);
+        return res.status(500).json({ success: false, message: 'Failed to process the barcode image.' });
+    }
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
@@ -248,5 +282,6 @@ module.exports = {
     deleteProduct,
     generateDescription,
     suggestCategory,
-    getProductByBarcode
+    getProductByBarcode,
+    decodeBarcodeImage
 }
