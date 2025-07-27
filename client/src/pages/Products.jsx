@@ -11,6 +11,8 @@ import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
 import { toast } from 'react-hot-toast';
 import { db } from '../db';
 import { addToOutbox } from '../services/syncManager';
+import { useRef } from 'react';
+import { UploadCloud } from 'lucide-react';
 
 const Products = () => {
     const { data: products, loading, error, forceSync } = useCachedData('products', '/products');
@@ -20,6 +22,7 @@ const Products = () => {
     const [deletingProduct, setDeletingProduct] = useState(null);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
+    const barcodeFileInputRef = useRef(null);
 
     const handleMutationSuccess = () => {
         forceSync();
@@ -60,6 +63,7 @@ const Products = () => {
     };
 
     const handleScanSuccess = async (barcode) => {
+        setIsScannerOpen(false);
         toast.loading(`Searching for barcode: ${barcode}`);
         try {
             const response = await apiClient.get(`/products/barcode/${barcode}`);
@@ -72,26 +76,42 @@ const Products = () => {
         }
     };
 
+    const handleBarcodeImageSearch = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const uploadFormData = new FormData();
+        uploadFormData.append('barcodeImage', file);
+
+        toast.loading('Decoding and searching...');
+        try {
+            const response = await apiClient.post('/products/decode-barcode', uploadFormData);
+            handleScanSuccess(response.data.barcode); // Reuse the scan success logic
+        } catch (error) {
+            toast.dismiss();
+            toast.error(error.response?.data?.message || 'Could not find product from image.');
+        } finally {
+            if (barcodeFileInputRef.current) {
+                barcodeFileInputRef.current.value = "";
+            }
+        }
+    };
+
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-text-primary">Inventory</h1>
-                <div className="flex items-center gap-4">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setIsScannerOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-secondary text-text-primary font-semibold rounded-lg shadow-md hover:bg-secondary/80 border border-border transition-colors"
-                    >
-                        <Camera size={20} />
-                        Scan Barcode
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <input type="file" ref={barcodeFileInputRef} onChange={handleBarcodeImageSearch} className="hidden" accept="image/*" id="barcode-search-upload" />
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => document.getElementById('barcode-search-upload').click()} className="flex items-center gap-2 px-4 py-2 bg-secondary text-text-primary font-semibold rounded-lg shadow-sm hover:bg-secondary/80 border border-border transition-colors">
+                        <UploadCloud size={20} />
+                        <span className="hidden sm:inline">Upload Barcode</span>
                     </motion.button>
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg shadow-md hover:bg-accent/90 transition-colors"
-                    >
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsScannerOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-secondary text-text-primary font-semibold rounded-lg shadow-sm hover:bg-secondary/80 border border-border transition-colors">
+                        <Camera size={20} />
+                        <span className="hidden sm:inline">Scan Barcode</span>
+                    </motion.button>
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg shadow-md hover:bg-accent/90 transition-colors">
                         <PlusCircle size={20} /> Add Product
                     </motion.button>
                 </div>

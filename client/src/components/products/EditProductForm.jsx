@@ -4,8 +4,10 @@ import { db } from '../../db';
 import { addToOutbox } from '../../services/syncManager';
 import FormField from '../common/FormField';
 import { motion } from 'framer-motion';
-import { Loader2, Upload, Edit, PackageMinus, Sparkles } from 'lucide-react';
+import { Loader2, Upload, Edit, PackageMinus, Sparkles, UploadCloud, Camera } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import BarcodeScannerModal from '../common/BarcodeScannerModal';
+import { useRef } from 'react';
 
 const formatDateForInput = (dateString) => {
     if (!dateString) return '';
@@ -20,6 +22,38 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
     });
     const [imageFile, setImageFile] = useState(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
+    const [isDecoding, setIsDecoding] = useState(false);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const barcodeFileInputRef = useRef(null);
+
+    const handleBarcodeImageUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const uploadFormData = new FormData();
+        uploadFormData.append('barcodeImage', file);
+        setIsDecoding(true);
+        toast.loading('Decoding barcode...');
+        try {
+            const response = await apiClient.post('/products/decode-barcode', uploadFormData);
+            setDetailsData(prev => ({ ...prev, barcode: response.data.barcode }));
+            toast.dismiss();
+            toast.success('Barcode decoded and filled!');
+        } catch (error) {
+            toast.dismiss();
+            toast.error(error.response?.data?.message || 'Could not decode barcode.');
+        } finally {
+            setIsDecoding(false);
+            if (barcodeFileInputRef.current) {
+                barcodeFileInputRef.current.value = "";
+            }
+        }
+    };
+
+    const handleScanSuccess = (scannedCode) => {
+        setDetailsData(prev => ({ ...prev, barcode: scannedCode }));
+        setIsScannerOpen(false);
+        toast.success("Barcode scanned!");
+    };
 
     const [adjustmentData, setAdjustmentData] = useState({
         quantity: '',
@@ -136,85 +170,106 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
     };
 
     return (
-        <div className="space-y-6">
-            {error && <p className="text-sm text-danger text-center p-2 bg-danger/10 rounded-md">{error}</p>}
+        <>
+            <div className="space-y-6">
+                {error && <p className="text-sm text-danger text-center p-2 bg-danger/10 rounded-md">{error}</p>}
 
-            <form onSubmit={handleDetailsSubmit} className="space-y-4">
-                <h3 className="text-lg font-semibold text-text-primary border-b border-border pb-2 flex items-center gap-2"><Edit size={20} /> Edit Product Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5 p-1">
-                    <FormField label="Product Name" id="edit-name" name="name" value={detailsData.name} onChange={handleDetailsChange} required />
-                    <FormField label="SKU" id="edit-sku" name="sku" value={detailsData.sku} onChange={handleDetailsChange} required />
-                    <FormField label="Category" id="edit-category" name="category" value={detailsData.category} onChange={handleDetailsChange} required />
-                    <FormField label="Current Stock Level" id="edit-stockLevel" name="stockLevel" type="number" value={detailsData.stockLevel} onChange={handleDetailsChange} required />
-                    <FormField label="Low Stock Threshold" id="edit-threshold" name="threshold" type="number" value={detailsData.threshold} onChange={handleDetailsChange} required />
-                    <FormField label="Buying Price ($)" id="edit-buyingPrice" name="buyingPrice" type="number" step="0.01" value={detailsData.buyingPrice} onChange={handleDetailsChange} required />
-                    <div>
-                        <label htmlFor="edit-sellingPrice" className="form-label flex justify-between items-center">
-                            Selling Price ($)
-                            <button type="button" onClick={handlePricingSuggestion} className="flex items-center gap-1 text-xs text-accent hover:underline">
-                                <Sparkles size={14} /> Get Suggestion
-                            </button>
-                        </label>
-                        <input id="edit-sellingPrice" name="sellingPrice" type="number" step="0.01" value={detailsData.sellingPrice} onChange={handleDetailsChange} required className="input-field" />
+                <form onSubmit={handleDetailsSubmit} className="space-y-4">
+                    <h3 className="text-lg font-semibold text-text-primary border-b border-border pb-2 flex items-center gap-2"><Edit size={20} /> Edit Product Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5 p-1">
+                        <FormField label="Product Name" id="edit-name" name="name" value={detailsData.name} onChange={handleDetailsChange} required />
+                        <FormField label="SKU" id="edit-sku" name="sku" value={detailsData.sku} onChange={handleDetailsChange} required />
+                        <FormField label="Category" id="edit-category" name="category" value={detailsData.category} onChange={handleDetailsChange} required />
+                        <FormField label="Current Stock Level" id="edit-stockLevel" name="stockLevel" type="number" value={detailsData.stockLevel} onChange={handleDetailsChange} required />
+                        <FormField label="Low Stock Threshold" id="edit-threshold" name="threshold" type="number" value={detailsData.threshold} onChange={handleDetailsChange} required />
+                        <FormField label="Buying Price ($)" id="edit-buyingPrice" name="buyingPrice" type="number" step="0.01" value={detailsData.buyingPrice} onChange={handleDetailsChange} required />
+                        <div>
+                            <label htmlFor="edit-sellingPrice" className="form-label flex justify-between items-center">
+                                Selling Price ($)
+                                <button type="button" onClick={handlePricingSuggestion} className="flex items-center gap-1 text-xs text-accent hover:underline">
+                                    <Sparkles size={14} /> Get Suggestion
+                                </button>
+                            </label>
+                            <input id="edit-sellingPrice" name="sellingPrice" type="number" step="0.01" value={detailsData.sellingPrice} onChange={handleDetailsChange} required className="input-field" />
+                        </div>
+                        <FormField label="Expiry Date" id="edit-expiryDate" name="expiryDate" type="date" value={detailsData.expiryDate} onChange={handleDetailsChange} />
                     </div>
-                    <FormField label="Expiry Date" id="edit-expiryDate" name="expiryDate" type="date" value={detailsData.expiryDate} onChange={handleDetailsChange} />
-                </div>
-                <div>
-                    <label htmlFor="edit-description" className="form-label">Description</label>
-                    <textarea id="edit-description" name="description" value={detailsData.description} onChange={handleDetailsChange} rows="3" className="input-field"></textarea>
-                </div>
-                <FormField label="Barcode (UPC/EAN)" id="edit-barcode" name="barcode" value={detailsData.barcode} onChange={handleDetailsChange} />
-                <div className="pt-2">
-                    <label className="block text-sm font-medium text-text-secondary mb-1">Update Image (Optional)</label>
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-border border-dashed rounded-md">
-                        <div className="space-y-1 text-center">
-                            <Upload className="mx-auto h-12 w-12 text-text-secondary" />
-                            <div className="flex text-sm text-text-secondary">
-                                <label htmlFor="edit-image" className="relative cursor-pointer bg-secondary rounded-md font-medium text-accent hover:text-accent/80 p-1">
-                                    <span>Upload a file</span>
-                                    <input id="edit-image" name="image" type="file" className="sr-only" onChange={handleFileChange} />
-                                </label>
+                    <div>
+                        <label htmlFor="edit-description" className="form-label">Description</label>
+                        <textarea id="edit-description" name="description" value={detailsData.description} onChange={handleDetailsChange} rows="3" className="input-field"></textarea>
+                    </div>
+                    <div>
+                        <label htmlFor="edit-barcode" className="form-label">Barcode (UPC/EAN)</label>
+                        <div className="relative mt-1">
+                            <input id="edit-barcode" name="barcode" value={detailsData.barcode} onChange={handleDetailsChange} className="input-field pr-20" />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-2 gap-1">
+                                <input type="file" ref={barcodeFileInputRef} onChange={handleBarcodeImageUpload} className="hidden" accept="image/*" id="barcode-edit-upload" disabled={isDecoding} />
+                                <button type="button" onClick={() => document.getElementById('barcode-edit-upload').click()} title="Upload Barcode Image" className="p-2 text-text-secondary hover:text-accent rounded-md disabled:opacity-50" disabled={isDecoding}>
+                                    {isDecoding ? <Loader2 size={18} className="animate-spin" /> : <UploadCloud size={18} />}
+                                </button>
+                                <button type="button" onClick={() => setIsScannerOpen(true)} title="Scan Barcode with Camera" className="p-2 text-text-secondary hover:text-accent rounded-md">
+                                    <Camera size={18} />
+                                </button>
                             </div>
-                            <p className="text-xs text-text-secondary">{imageFile ? imageFile.name : 'PNG, JPG up to 10MB'}</p>
                         </div>
                     </div>
-                </div>
-                <div className="flex justify-end pt-2">
-                    <button type="submit" disabled={detailsLoading} className="px-4 py-2 bg-accent text-white font-semibold rounded-lg flex items-center justify-center w-36">
-                        {detailsLoading ? <Loader2 className="animate-spin" /> : 'Save Details'}
-                    </button>
-                </div>
-            </form>
-
-            <form onSubmit={handleStockAdjustment} className="space-y-4 pt-4 border-t border-border">
-                <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2"><PackageMinus size={20} /> Manual Stock Adjustment</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5 p-1">
-                    <div>
-                        <label htmlFor="actionType" className="form-label">Reason / Action</label>
-                        <select
-                            id="actionType"
-                            name="actionType"
-                            value={adjustmentData.actionType}
-                            onChange={handleAdjustmentChange}
-                            className="select-field"
-                            required
-                        >
-                            <option value="RESTOCK">Restock (+)</option>
-                            <option value="RETURN">Customer Return (+)</option>
-                            <option value="SALE">Manual Sale (-)</option>
-                            <option value="DAMAGE">Damaged Goods (-)</option>
-                        </select>
+                    <div className="pt-2">
+                        <label className="block text-sm font-medium text-text-secondary mb-1">Update Image (Optional)</label>
+                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-border border-dashed rounded-md">
+                            <div className="space-y-1 text-center">
+                                <Upload className="mx-auto h-12 w-12 text-text-secondary" />
+                                <div className="flex text-sm text-text-secondary">
+                                    <label htmlFor="edit-image" className="relative cursor-pointer bg-secondary rounded-md font-medium text-accent hover:text-accent/80 p-1">
+                                        <span>Upload a file</span>
+                                        <input id="edit-image" name="image" type="file" className="sr-only" onChange={handleFileChange} />
+                                    </label>
+                                </div>
+                                <p className="text-xs text-text-secondary">{imageFile ? imageFile.name : 'PNG, JPG up to 10MB'}</p>
+                            </div>
+                        </div>
                     </div>
-                    <FormField label="Quantity" id="quantity" name="quantity" type="number" value={adjustmentData.quantity} onChange={handleAdjustmentChange} placeholder="e.g., 10" required />
-                </div>
-                <FormField label="Notes (Optional)" id="notes" name="notes" value={adjustmentData.notes} onChange={handleAdjustmentChange} placeholder="e.g., Warehouse transfer" />
-                <div className="flex justify-end pt-2">
-                    <button type="submit" disabled={adjustmentLoading} className="px-4 py-2 bg-secondary text-white font-semibold rounded-lg border border-border flex items-center justify-center w-36">
-                        {adjustmentLoading ? <Loader2 className="animate-spin" /> : 'Adjust Stock'}
-                    </button>
-                </div>
-            </form>
-        </div>
+                    <div className="flex justify-end pt-2">
+                        <button type="submit" disabled={detailsLoading} className="px-4 py-2 bg-accent text-white font-semibold rounded-lg flex items-center justify-center w-36">
+                            {detailsLoading ? <Loader2 className="animate-spin" /> : 'Save Details'}
+                        </button>
+                    </div>
+                </form>
+
+                <form onSubmit={handleStockAdjustment} className="space-y-4 pt-4 border-t border-border">
+                    <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2"><PackageMinus size={20} /> Manual Stock Adjustment</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5 p-1">
+                        <div>
+                            <label htmlFor="actionType" className="form-label">Reason / Action</label>
+                            <select
+                                id="actionType"
+                                name="actionType"
+                                value={adjustmentData.actionType}
+                                onChange={handleAdjustmentChange}
+                                className="select-field"
+                                required
+                            >
+                                <option value="RESTOCK">Restock (+)</option>
+                                <option value="RETURN">Customer Return (+)</option>
+                                <option value="SALE">Manual Sale (-)</option>
+                                <option value="DAMAGE">Damaged Goods (-)</option>
+                            </select>
+                        </div>
+                        <FormField label="Quantity" id="quantity" name="quantity" type="number" value={adjustmentData.quantity} onChange={handleAdjustmentChange} placeholder="e.g., 10" required />
+                    </div>
+                    <FormField label="Notes (Optional)" id="notes" name="notes" value={adjustmentData.notes} onChange={handleAdjustmentChange} placeholder="e.g., Warehouse transfer" />
+                    <div className="flex justify-end pt-2">
+                        <button type="submit" disabled={adjustmentLoading} className="px-4 py-2 bg-secondary text-white font-semibold rounded-lg border border-border flex items-center justify-center w-36">
+                            {adjustmentLoading ? <Loader2 className="animate-spin" /> : 'Adjust Stock'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <BarcodeScannerModal
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onScanSuccess={handleScanSuccess}
+            />
+        </>
     );
 };
 

@@ -1,5 +1,5 @@
 const {Router} = require('express');
-const { createProduct, getAllProducts, updateProduct, deleteProduct, generateDescription, suggestCategory, getProductByBarcode } = require('../controllers/product.controller');
+const { createProduct, getAllProducts, updateProduct, deleteProduct, generateDescription, suggestCategory, getProductByBarcode, decodeBarcodeImage } = require('../controllers/product.controller');
 const protect = require('../middleware/auth.middleware');
 const authorize = require('../middleware/role.middleware');
 const upload = require('../middleware/multer.middleware');
@@ -14,5 +14,6 @@ router.post('/generate-description', protect, authorize('Admin'), generateDescri
 router.post('/suggest-category', protect, authorize('Admin'), suggestCategory);
 
 router.get('/barcode/:barcode', protect, authorize('Admin', 'Staff'), getProductByBarcode);
+router.post('/decode-barcode', protect, authorize('Admin'), upload.single('barcodeImage'), decodeBarcodeImage);
 
 module.exports = router;
