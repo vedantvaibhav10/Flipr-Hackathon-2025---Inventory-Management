@@ -88,8 +88,52 @@ const getPricingSuggestion = async (req, res) => {
     }
 };
 
+const handleChatQuery = async (req, res) => {
+    try {
+        const { message } = req.body;
+        if (!message) {
+            return res.status(400).json({ success: false, message: 'A message is required.' });
+        }
+
+        const lowStockProducts = await Product.find({ $expr: { $lt: ["$stockLevel", "$threshold"] } }).select('name stockLevel threshold').lean();
+        const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(5).populate('product', 'name').select('status product quantity').lean();
+        const totalProducts = await Product.countDocuments();
+        const totalSuppliers = await Supplier.countDocuments();
+
+        const context = `
+            You are an expert inventory management assistant named 'InvTrack AI'.
+            Answer the user's question based ONLY on the following live data from the database.
+            Keep your answers concise and friendly.
+
+            --- LIVE DATA ---
+            Current Date: ${new Date().toLocaleDateString()}
+            Total Products in Inventory: ${totalProducts}
+            Total Suppliers: ${totalSuppliers}
+            Low Stock Products: ${JSON.stringify(lowStockProducts)}
+            Recent Orders: ${JSON.stringify(recentOrders)}
+            --- END LIVE DATA ---
+        `;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+                { role: "system", content: context },
+                { role: "user", content: message }
+            ],
+        });
+
+        const reply = response.choices[0].message.content.trim();
+        res.status(200).json({ success: true, reply });
+
+    } catch (error) {
+        console.error("Chatbot error:", error);
+        res.status(500).json({ success: false, message: 'The AI assistant is currently unavailable.' });
+    }
+};
+
 module.exports = {
     getReorderSuggestion,
     getSupplierAnalysis,
     getPricingSuggestion,
+    handleChatQuery
 };
