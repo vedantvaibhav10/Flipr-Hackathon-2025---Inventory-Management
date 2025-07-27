@@ -252,7 +252,9 @@ const decodeBarcodeImage = async (req, res) => {
 
     const imagePath = req.file.path;
     try {
-        const image = await Jimp.read(imagePath);
+        const JimpObject = Jimp.default || Jimp;
+        const image = await JimpObject.read(imagePath);
+
         const rawImageData = {
             data: new Uint8ClampedArray(image.bitmap.data),
             width: image.bitmap.width,
