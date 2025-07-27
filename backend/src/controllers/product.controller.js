@@ -250,16 +250,9 @@ const decodeBarcodeImage = async (req, res) => {
         return res.status(400).json({ success: false, message: 'No barcode image uploaded.' });
     }
 
-    console.log('--- STARTING JIMP DEBUG ---'.bgYellow);
-    console.log('Type of imported Jimp object:', typeof Jimp);
-    console.log('Is Jimp a function?', Jimp instanceof Function);
-    console.log('Keys on Jimp object:', Object.keys(Jimp));
-    console.log('--- ENDING JIMP DEBUG ---'.bgYellow);
-
     const imagePath = req.file.path;
     try {
-        const JimpObject = Jimp.default || Jimp;
-        const image = await JimpObject.read(imagePath);
+        const image = await Jimp.Jimp.read(imagePath);
 
         const rawImageData = {
             data: new Uint8ClampedArray(image.bitmap.data),

@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import apiClient from '../../api';
 import SearchResults from './SearchResults';
 import AISearchModal from '../common/AISearchModal';
+import NotificationPopover from './NotificationPopover';
 
 const useClickOutside = (ref, handler) => {
     useEffect(() => {
@@ -34,6 +35,33 @@ const Header = () => {
 
     const [isAiSearchOpen, setIsAiSearchOpen] = useState(false);
 
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const notificationsRef = useRef(null);
+    useClickOutside(notificationsRef, () => setShowNotifications(false));
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const response = await apiClient.get('/products');
+                const lowStockProducts = response.data.data.filter(p => p.stockLevel < p.threshold);
+                setNotifications(lowStockProducts);
+
+                const lastRead = localStorage.getItem('lastReadTimestamp') || 0;
+                const newUnreadCount = lowStockProducts.filter(p => new Date(p.updatedAt).getTime() > lastRead).length;
+                setUnreadCount(newUnreadCount);
+            } catch (error) {
+                console.error("Failed to fetch notifications:", error);
+            }
+        };
+
+        fetchNotifications();
+        const intervalId = setInterval(fetchNotifications, 30000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
     useEffect(() => {
         if (searchQuery.trim().length < 2) {
             setSearchResults({});
@@ -54,6 +82,12 @@ const Header = () => {
         }, 300);
         return () => clearTimeout(debounceSearch);
     }, [searchQuery]);
+
+    const handleMarkAsRead = () => {
+        localStorage.setItem('lastReadTimestamp', Date.now().toString());
+        setUnreadCount(0);
+        setTimeout(() => setShowNotifications(false), 300);
+    };
 
     return (
         <>
@@ -90,10 +124,23 @@ const Header = () => {
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <button className="relative text-text-secondary hover:text-text-primary transition-colors">
-                        <Bell size={22} />
-                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-danger rounded-full border-2 border-primary"></span>
-                    </button>
+                    <div className="relative" ref={notificationsRef}>
+                        <button onClick={() => setShowNotifications(prev => !prev)} className="relative text-text-secondary hover:text-text-primary transition-colors">
+                            <Bell size={22} />
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-danger rounded-full border-2 border-primary text-white text-[10px] flex items-center justify-center font-bold animate-pulse">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+                        {showNotifications && (
+                            <NotificationPopover
+                                notifications={notifications}
+                                unreadCount={unreadCount}
+                                onMarkAsRead={handleMarkAsRead}
+                            />
+                        )}
+                    </div>
                     <div className="flex items-center gap-3">
                         <img
                             src={`https://ui-avatars.com/api/?name=${user?.name}&background=58A6FF&color=fff&bold=true`}
