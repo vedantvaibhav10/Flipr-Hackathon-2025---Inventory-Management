@@ -131,9 +131,66 @@ const handleChatQuery = async (req, res) => {
     }
 };
 
+const handleNaturalLanguageSearch = async (req, res) => {
+    try {
+        const { query } = req.body;
+        if (!query) {
+            return res.status(400).json({ message: 'Search query is required.' });
+        }
+
+        const prompt = `
+            You are a database query assistant. A user has sent the following natural language search query: "${query}".
+            Your task is to convert this query into a structured JSON object that can be used to query a MongoDB database.
+            The available collections are 'products' and 'suppliers'.
+            For products, you can filter by 'category', 'name', or stock status ('low' or 'healthy').
+            For suppliers, you can filter by 'name'.
+            If the query seems to ask for a general summary or a question you can answer directly, respond with a direct text answer.
+
+            Respond with ONLY the JSON object.
+
+            Examples:
+            - User query: "show me all low stock beverages" -> {"collection": "products", "filters": {"category": "Beverages", "stockStatus": "low"}}
+            - User query: "find the supplier named Global Foods" -> {"collection": "suppliers", "filters": {"name": "Global Foods"}}
+            - User query: "how many total products do we have?" -> {"answer": "I can find that out for you. One moment..."}
+        `;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: prompt }],
+        });
+
+        const aiResponse = JSON.parse(response.choices[0].message.content.trim());
+
+        if (aiResponse.answer) {
+            return res.json({ success: true, type: 'answer', data: aiResponse.answer });
+        }
+
+        let results = [];
+        if (aiResponse.collection === 'products') {
+            const mongoQuery = {};
+            if (aiResponse.filters.category) mongoQuery.category = { $regex: aiResponse.filters.category, $options: 'i' };
+            if (aiResponse.filters.name) mongoQuery.name = { $regex: aiResponse.filters.name, $options: 'i' };
+            if (aiResponse.filters.stockStatus === 'low') mongoQuery.$expr = { $lt: ["$stockLevel", "$threshold"] };
+
+            results = await Product.find(mongoQuery).limit(10);
+        } else if (aiResponse.collection === 'suppliers') {
+            const mongoQuery = {};
+            if (aiResponse.filters.name) mongoQuery.name = { $regex: aiResponse.filters.name, $options: 'i' };
+            results = await Supplier.find(mongoQuery).limit(10);
+        }
+
+        res.json({ success: true, type: 'results', data: results, collection: aiResponse.collection });
+
+    } catch (error) {
+        console.error("AI Search error:", error);
+        res.status(500).json({ message: 'AI search failed.' });
+    }
+};
+
 module.exports = {
     getReorderSuggestion,
     getSupplierAnalysis,
     getPricingSuggestion,
-    handleChatQuery
+    handleChatQuery,
+    handleNaturalLanguageSearch
 };

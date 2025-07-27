@@ -1,5 +1,5 @@
 const {Router} = require('express');
-const { createProduct, getAllProducts, updateProduct, deleteProduct, generateDescription, suggestCategory } = require('../controllers/product.controller');
+const { createProduct, getAllProducts, updateProduct, deleteProduct, generateDescription, suggestCategory, getProductByBarcode } = require('../controllers/product.controller');
 const protect = require('../middleware/auth.middleware');
 const authorize = require('../middleware/role.middleware');
 const upload = require('../middleware/multer.middleware');
@@ -12,5 +12,7 @@ router.put('/:id', protect, authorize('Admin'), upload.single('image'), updatePr
 router.delete('/:id', protect, authorize('Admin'), deleteProduct);
 router.post('/generate-description', protect, authorize('Admin'), generateDescription);
 router.post('/suggest-category', protect, authorize('Admin'), suggestCategory);
+
+router.get('/barcode/:barcode', protect, authorize('Admin', 'Staff'), getProductByBarcode);
 
 module.exports = router;
