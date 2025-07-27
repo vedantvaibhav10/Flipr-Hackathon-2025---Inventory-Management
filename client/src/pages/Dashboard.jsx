@@ -55,15 +55,8 @@ const Dashboard = () => {
         visible: { y: 0, opacity: 1 }
     };
 
-    if (error) {
-        return <ErrorDisplay message={error} onRetry={fetchSummary} />;
-    }
-
-    if (loading) {
-        return <div className="flex justify-center mt-10"><Loader2 className="animate-spin h-8 w-8 text-accent" /></div>;
-    }
-
     if (error) return <ErrorDisplay message={error} onRetry={fetchSummary} />;
+    if (loading) return <div className="flex justify-center mt-10"><Loader2 className="animate-spin h-8 w-8 text-accent" /></div>;
 
     return (
         <motion.div

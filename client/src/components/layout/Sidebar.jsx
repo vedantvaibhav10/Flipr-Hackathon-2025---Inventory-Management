@@ -1,4 +1,4 @@
-import { Home, Package, BarChart2, Users, ShoppingCart, LogOut, Settings, ShieldCheck } from 'lucide-react';
+import { Home, Package, BarChart2, Users, ShoppingCart, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -21,7 +21,7 @@ const Sidebar = () => {
     };
 
     return (
-        <aside className="w-64 bg-primary flex flex-col h-screen p-4 border-r border-border flex-shrink-0">
+        <aside className="w-64 bg-primary flex flex-col h-screen p-4 border-r border-border flex-shrink-0 sticky top-0">
             <div className="mb-10 p-2 flex items-center gap-3">
                 <div className="bg-secondary p-2 rounded-lg">
                     <svg width="24" height="24" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
@@ -48,7 +48,7 @@ const Sidebar = () => {
                     ))}
                 </ul>
             </nav>
-            <div className="space-y-1">
+            <div className="space-y-1 mb-20">
                 <NavLink to="/settings" className={({ isActive }) => `flex items-center p-3 w-full rounded-lg transition-colors text-text-secondary hover:bg-secondary hover:text-text-primary ${isActive ? 'bg-accent/10 text-accent font-semibold' : ''}`}>
                     <Settings className="w-5 h-5 mr-4" />
                     <span>Settings</span>
@@ -57,10 +57,6 @@ const Sidebar = () => {
                     <LogOut className="w-5 h-5 mr-4" />
                     <span>Logout</span>
                 </motion.button>
-                <NavLink to="/health" className={({ isActive }) => `flex items-center p-3 w-full rounded-lg transition-colors text-text-secondary hover:bg-secondary hover:text-text-primary ${isActive ? 'bg-accent/10 text-accent font-semibold' : ''}`}>
-                    <ShieldCheck className="w-5 h-5 mr-4" />
-                    <span>Health</span>
-                </NavLink>
             </div>
         </aside>
     );
