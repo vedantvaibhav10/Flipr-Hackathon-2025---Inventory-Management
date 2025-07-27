@@ -16,6 +16,7 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
     const [detailsData, setDetailsData] = useState({
         name: '', sku: '', category: '', description: '', threshold: '',
         buyingPrice: '', sellingPrice: '', expiryDate: '', stockLevel: '',
+        barcode: '',
     });
     const [imageFile, setImageFile] = useState(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
@@ -41,6 +42,7 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
                 sellingPrice: product.sellingPrice ?? '',
                 expiryDate: formatDateForInput(product.expiryDate),
                 stockLevel: product.stockLevel ?? '',
+                barcode: product.barcode || '',
             });
         }
     }, [product]);
@@ -181,6 +183,7 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
                         {detailsLoading ? <Loader2 className="animate-spin" /> : 'Save Details'}
                     </button>
                 </div>
+                <FormField label="Barcode (UPC/EAN)" id="edit-barcode" name="barcode" value={detailsData.barcode} onChange={handleDetailsChange} />
             </form>
 
             <form onSubmit={handleStockAdjustment} className="space-y-4 pt-4 border-t border-border">
