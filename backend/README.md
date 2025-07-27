@@ -9,17 +9,25 @@ A powerful and secure RESTful API built with Node.js, Express, and MongoDB. Feat
 
 ## 🚀 Live Demo
 
-**Deployed API:** [https://inventory-management-backend-gmik.onrender.com](https://inventory-management-backend-gmik.onrender.com)
+**Deployed API:** [https://inventory-management-backend-j0w6.onrender.com](https://inventory-management-backend-j0w6.onrender.com)
+
+**Postman Collection:** [View API Documentation](https://chatappteam-4066.postman.co/workspace/Inventory-Management-System~fca858b0-00b0-4251-ae0d-935c5fdfe865/collection/29392182-d91216a6-4b39-4eae-9bb0-210ac3ca2da3?action=share&creator=29392182&active-environment=29392182-e6dcb596-3f9b-4b76-9e9a-506407f3157a)
+
+**Test Credentials:**
+- Admin: admin@example.com | Password: 123456
+- Staff: staff@example.com | Password: 123456
 
 ## ✨ Features
 
-- 🔐 **Role-based Authentication** - JWT-based auth with Admin/Staff roles
-- 🤖 **AI-Powered Insights** - Smart descriptions, category suggestions, and reorder recommendations
-- 📧 **Automated Alerts** - Email notifications for low stock and critical events
-- 📊 **Advanced Reporting** - Comprehensive analytics and data export
+- 🔐 **Secure Authentication** - JWT-based authentication with httpOnly cookies, plus Google & GitHub OAuth 2.0 via Passport.js
+- 👤 **Role-Based Access Control (RBAC)** - Distinct permissions for 'Admin' and 'Staff' roles
+- 🤖 **AI Integration** - A full suite of endpoints that leverage the OpenAI API for intelligent data analysis, suggestions, and natural language processing
+- 📧 **Automated Email Alerts** - Uses Nodemailer for OTP verification and AI-powered low-stock notifications
+- 📊 **Advanced Aggregation** - A powerful reporting endpoint that uses the MongoDB Aggregation Pipeline for efficient, complex data analysis
 - 🔍 **Global Search** - Search across products and suppliers
 - 📱 **RESTful API** - Clean, documented endpoints
 - ☁️ **Cloud Storage** - Cloudinary integration for image management
+- 🌐 **CORS Enabled** - Securely configured to work with the deployed frontend application
 - 🔒 **Secure** - Input validation, sanitization, and security headers
 
 ## 🏗️ Architecture
@@ -37,6 +45,31 @@ A powerful and secure RESTful API built with Node.js, Express, and MongoDB. Feat
                        │  • Nodemailer    │
                        └──────────────────┘
 ```
+
+## 🔐 Authorization Roles
+
+The API has two user roles with specific permissions:
+
+| Feature / Action | 👤 Staff | 👑 Admin |
+|------------------|----------|----------|
+| Dashboard & Reports | ✅ | ✅ |
+| View Products & Suppliers | ✅ | ✅ |
+| Create/Edit/Delete Products | ❌ | ✅ |
+| Create/Edit/Delete Suppliers | ❌ | ✅ |
+| Create & Update Orders | ✅ | ✅ |
+| Delete Orders | ❌ | ✅ |
+| Manual Stock Adjustments | ✅ | ✅ |
+| View Inventory Logs | ❌ | ✅ |
+| Access All AI Features | ❌ | ✅ |
+| OAuth Authentication | ✅ | ✅ |
+
+## 🛠️ Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| **Backend** | Node.js, Express, MongoDB, Mongoose |
+| **Authentication** | JWT, Passport.js (Google & GitHub OAuth), bcrypt |
+| **Services** | Cloudinary (Image Storage), OpenAI (AI), Nodemailer (Email) |
 
 ## 🚀 Quick Start
 
@@ -114,10 +147,6 @@ All endpoints are prefixed with `/api/v1`
 ### Authentication
 The API uses JWT tokens stored in HTTP-only cookies. Include credentials in your requests.
 
-### Roles
-- **Admin**: Full access to all endpoints
-- **Staff**: Limited access to read operations and basic inventory management
-
 ---
 
 ## 🔗 API Endpoints
@@ -169,6 +198,30 @@ Content-Type: application/json
 POST /auth/logout
 ```
 
+#### Google OAuth Login
+```http
+GET /auth/google
+```
+Initiates Google OAuth2 login flow.
+
+#### GitHub OAuth Login
+```http
+GET /auth/github
+```
+Initiates GitHub OAuth login flow.
+
+#### Google OAuth Callback
+```http
+GET /auth/google/callback
+```
+Callback URL for Google OAuth2.
+
+#### GitHub OAuth Callback
+```http
+GET /auth/github/callback
+```
+Callback URL for GitHub OAuth.
+
 #### Get Current User
 ```http
 GET /auth/me
@@ -198,6 +251,25 @@ expiryDate: 2024-12-31 (optional)
 image: [file] (optional)
 ```
 
+#### Create Product from Offline Queue
+```http
+POST /products/sync
+Content-Type: application/json
+
+{
+  "name": "Product Name",
+  "sku": "SKU123",
+  "category": "Electronics",
+  "description": "Product description",
+  "buyingPrice": 100,
+  "sellingPrice": 150,
+  "stockLevel": 50,
+  "threshold": 10,
+  "expiryDate": "2024-12-31"
+}
+```
+*(Admin only)*
+
 #### Get All Products
 ```http
 GET /products
@@ -209,9 +281,21 @@ PUT /products/:id
 Content-Type: multipart/form-data
 ```
 
+#### Update Product from Offline Queue
+```http
+PUT /products/:id/sync
+Content-Type: application/json
+```
+*(Admin only)*
+
 #### Delete Product
 ```http
 DELETE /products/:id
+```
+
+#### Find Product by Barcode
+```http
+GET /products/barcode/:barcode
 ```
 
 ### Suppliers
@@ -273,6 +357,7 @@ Content-Type: application/json
 }
 ```
 *Status options: "Shipped", "Delivered", "Cancelled", "Returned"*
+*Automatically updates stock if status changes to 'Delivered'*
 
 #### Delete Order
 ```http
@@ -306,6 +391,7 @@ GET /inventory/logs
 ```http
 GET /reports/summary
 ```
+*Supports `startDate` and `endDate` query parameters for filtering. Uses MongoDB Aggregation Pipeline for efficient data analysis.*
 
 #### Export Products
 ```http
@@ -314,6 +400,29 @@ GET /reports/products/export
 *Returns CSV file download*
 
 ### AI Features
+
+#### Natural Language Search
+```http
+POST /ai/search
+Content-Type: application/json
+
+{
+  "query": "show me low stock beverages"
+}
+```
+*(Admin only)*
+
+#### AI Chatbot
+```http
+POST /ai/chatbot
+Content-Type: application/json
+
+{
+  "message": "What are my recent orders?",
+  "conversationHistory": []
+}
+```
+*(Admin only)*
 
 #### Generate Product Description
 ```http
@@ -399,3 +508,26 @@ curl -X GET http://localhost:5000/api/v1/products \
 | `CLOUDINARY_API_KEY` | Cloudinary API key | Yes |
 | `CLOUDINARY_API_SECRET` | Cloudinary API secret | Yes |
 | `OPENAI_API_KEY` | OpenAI API key | Yes |
+
+## 🔒 Security Features
+
+- JWT-based authentication with httpOnly cookies
+- Google and GitHub OAuth 2.0 integration
+- Role-based access control (RBAC)
+- Password hashing with bcrypt
+- Input validation and sanitization
+- Protected API routes with middleware
+- CORS configuration for secure cross-origin requests
+- Rate limiting and security headers
+
+## 🤖 AI Integration
+
+The backend integrates with OpenAI to provide intelligent features:
+
+- **Natural Language Search**: Query inventory using natural language
+- **Interactive Chatbot**: AI assistant for inventory-related questions
+- **Product Description Generation**: Automatically generate compelling product descriptions
+- **Category Suggestions**: AI-powered category recommendations
+- **Pricing Optimization**: Intelligent pricing suggestions
+- **Reorder Recommendations**: Smart inventory reorder suggestions based on patterns
+- **Supplier Analysis**: AI-generated supplier performance reports

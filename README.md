@@ -4,7 +4,7 @@
 [![Backend API](https://img.shields.io/badge/Backend%20API-Active-green)](https://inventory-management-backend-gmik.onrender.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-InvTrack is a modern, full-stack inventory management system designed to streamline your stock control processes. Built with a powerful MERN stack and integrated with OpenAI, it provides intelligent insights, automated alerts, and a beautiful, responsive user interface.
+InvTrack is a modern, full-stack inventory management system designed to streamline your stock control processes. Built with a powerful MERN stack and integrated with OpenAI, it provides intelligent insights, automated alerts, a beautiful responsive UI, and a complete offline-first experience.
 
 Postman Link for APIs testing - [https://chatappteam-4066.postman.co/workspace/Inventory-Management-System~fca858b0-00b0-4251-ae0d-935c5fdfe865/collection/29392182-d91216a6-4b39-4eae-9bb0-210ac3ca2da3?action=share&creator=29392182&active-environment=29392182-e6dcb596-3f9b-4b76-9e9a-506407f3157a](https://chatappteam-4066.postman.co/workspace/Inventory-Management-System~fca858b0-00b0-4251-ae0d-935c5fdfe865/collection/29392182-d91216a6-4b39-4eae-9bb0-210ac3ca2da3?action=share&creator=29392182&active-environment=29392182-e6dcb596-3f9b-4b76-9e9a-506407f3157a)
 
@@ -16,15 +16,14 @@ Admin Password: 123456
 Staff Email: staff@example.com
 Staff Password: 123456
 
-v1 Demo Video - 
+v2 Demo Video - 
 
-https://github.com/user-attachments/assets/b74e0e9c-7cce-4335-953e-b22aa5ee2eb
 
 v2 architecture diagram -
 
-View detailed architecture diagram here: https://drive.google.com/file/d/1zjsHgTla-Eg7HwzSN69jDYSv8apMWJrI/view?usp=sharing
-
 ![v2 detailed architecture (1)](https://github.com/user-attachments/assets/9ba1dd84-14ae-4f9c-aac2-4ce09964622d)
+
+View detailed architecture diagram here: https://drive.google.com/file/d/1zjsHgTla-Eg7HwzSN69jDYSv8apMWJrI/view?usp=sharing
 
 v2 Screenshots -
 
@@ -50,38 +49,58 @@ v2 Screenshots -
 
 ### 📊 Core Functionality
 
-- **Centralized Dashboard** - Get a real-time overview of your entire inventory, including stock value and low-stock items
-- **Complete Product Management** - Full CRUD (Create, Read, Update, Delete) functionality for products, including image uploads via Cloudinary
+- **Centralized Dashboard** - A real-time, filterable overview of your entire inventory, including sales, purchases, stock value, and low-stock items
+- **Complete Product Management** - Full CRUD (Create, Read, Update, Delete) functionality for products, including image uploads via Cloudinary and barcode scanning
 - **Supplier & Purchase Orders** - Manage suppliers and track purchase orders from creation to delivery
 - **Automated Stock Control** - Stock levels are automatically updated when purchase orders are marked as delivered
 - **Detailed Inventory Logs** - Track every single stock movement, whether from a sale, restock, or manual adjustment
+- **Secure Authentication** - Sign up and log in with email/password (with OTP verification) or securely via Google and GitHub OAuth
 - **Role-Based Access Control** - A secure system with distinct permissions for **Admin** and **Staff** roles
 - **Data Reporting & Export** - View detailed reports on inventory movements and export your product data to CSV
 
 ### 🧠 AI-Powered Intelligence
 
+- **Natural Language Search** - Use the smart search bar to ask complex questions like "show me low stock beverages" and get instant results
+- **Data-Aware Chatbot** - An interactive AI assistant that can answer questions about your current inventory, recent orders, and more
 - **Smart Reorder Suggestions** - Get AI recommendations on how much stock to reorder for low-stock items
 - **Automated Description & Category** - Generate professional product descriptions and get category suggestions with the click of a button
 - **Dynamic Pricing Suggestions** - Receive AI-driven advice on how to price your products for optimal profitability
 - **Supplier Performance Analysis** - Get an AI-generated summary of a supplier's reliability based on their order history
 - **AI-Generated Low-Stock Alerts** - Receive intelligently drafted, urgent email alerts when stock levels fall below the set threshold
 
-### 🏆 Offline & Data Resiliency Features
+### 🏆 Offline & Data Resiliency (Bonus Features)
 
-- **Full Offline-First Functionality** - The application is fully usable even without an internet connection. Data is cached locally using IndexedDB
+- **Full Offline-First Functionality** - The application is fully usable even without an internet connection. Data is cached locally using IndexedDB, allowing users to view products, suppliers, and orders while offline
 - **Offline Action Queue** - Create, update, and delete operations performed while offline are automatically saved to a local "outbox"
 - **Automatic Syncing** - When the internet connection is restored, the application automatically syncs all pending offline actions with the server
 - **Real-Time Status Indicators** - The UI features live indicators for both system health (API, DB, Services) and data sync status (Online, Offline, Syncing)
 - **Local Data Backups** - Users can download a complete JSON backup of their locally cached data at any time from the Settings page
 - **Automated Backup Reminders** - A non-intrusive toast notification reminds users to perform a backup if their last one was more than 24 hours ago
 
+## 🔐 Authorization Roles
+
+InvTrack has two user roles with specific permissions:
+
+| Feature / Action | 👤 Staff | 👑 Admin |
+|------------------|----------|----------|
+| Dashboard & Reports | ✅ | ✅ |
+| View Products & Suppliers | ✅ | ✅ |
+| Create/Edit/Delete Products | ❌ | ✅ |
+| Create/Edit/Delete Suppliers | ❌ | ✅ |
+| Create & Update Orders | ✅ | ✅ |
+| Delete Orders | ❌ | ✅ |
+| Manual Stock Adjustments | ✅ | ✅ |
+| View Inventory Logs | ❌ | ✅ |
+| Access All AI Features | ❌ | ✅ |
+| View Health & Settings | ✅ | ✅ |
+
 ## 🛠️ Tech Stack
 
 | Category | Technology |
 |----------|------------|
-| **Frontend** | React, Vite, Tailwind CSS, Recharts, Axios, Dexie.js |
+| **Frontend** | React, Vite, Tailwind CSS, Recharts, Axios, Dexie.js, Framer Motion |
 | **Backend** | Node.js, Express, MongoDB, Mongoose |
-| **Authentication** | JSON Web Tokens (JWT), bcrypt |
+| **Authentication** | JWT, Passport.js (Google & GitHub OAuth), bcrypt |
 | **Services** | Cloudinary (Image Storage), OpenAI (AI), Nodemailer (Email) |
 
 ## 🚀 Getting Started
@@ -190,6 +209,8 @@ db.users.updateOne(
 )
 ```
 
+Alternatively, to create an Admin user, you must manually update their role in the MongoDB database after registration.
+
 ### Role Permissions
 
 - **Admin**: Full access to all features including user management, system settings, and advanced AI features
@@ -224,6 +245,8 @@ db.users.updateOne(
 
 The application integrates with OpenAI to provide intelligent features:
 
+- **Natural Language Search**: Ask complex questions using natural language
+- **Interactive Chatbot**: Data-aware assistant for inventory queries
 - **Product Description Generation**: Automatically generate compelling product descriptions
 - **Category Suggestions**: Get AI-powered category recommendations
 - **Pricing Optimization**: Receive intelligent pricing suggestions
@@ -238,10 +261,13 @@ InvTrack is built with offline-first architecture:
 - **Offline Operations**: Full CRUD operations available offline
 - **Smart Sync**: Automatic synchronization when connection is restored
 - **Conflict Resolution**: Intelligent handling of data conflicts during sync
+- **Status Indicators**: Real-time indicators for system health and sync status
+- **Backup System**: Local data backups with automated reminders
 
 ## 🔒 Security Features
 
 - JWT-based authentication
+- Google and GitHub OAuth integration
 - Role-based access control (RBAC)
 - Password hashing with bcrypt
 - Input validation and sanitization
