@@ -11,6 +11,7 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
     const [formData, setFormData] = useState({
         name: '', sku: '', category: '', description: '', stockLevel: '',
         threshold: '', buyingPrice: '', sellingPrice: '', expiryDate: '',
+        barcode: '',
     });
     const [imageFile, setImageFile] = useState(null);
     const [error, setError] = useState('');
@@ -126,6 +127,7 @@ const AddProductForm = ({ onProductAdded, onClose }) => {
                 <FormField label="Selling Price ($)" id="sellingPrice" name="sellingPrice" type="number" step="0.01" value={formData.sellingPrice} onChange={handleChange} required />
                 <FormField label="Low Stock Threshold" id="threshold" name="threshold" type="number" value={formData.threshold} onChange={handleChange} required />
                 <FormField label="Expiry Date (Optional)" id="expiryDate" name="expiryDate" type="date" value={formData.expiryDate} onChange={handleChange} />
+                <FormField label="Barcode (UPC/EAN)" id="barcode" name="barcode" value={formData.barcode} onChange={handleChange} />
             </div>
 
             <div>

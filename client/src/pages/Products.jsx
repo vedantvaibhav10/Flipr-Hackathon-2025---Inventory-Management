@@ -2,20 +2,23 @@ import { useEffect, useState } from 'react';
 import { useCachedData } from '../hooks/useCachedData';
 import apiClient from '../api';
 import { motion } from 'framer-motion';
-import { PlusCircle, Loader2, Edit, Trash2, Lightbulb, WifiOff } from 'lucide-react';
+import { PlusCircle, Loader2, Edit, Trash2, Lightbulb, Camera, WifiOff } from 'lucide-react';
 import Modal from '../components/common/Modal';
 import AddProductForm from '../components/products/AddProductForm';
 import EditProductForm from '../components/products/EditProductForm';
 import DeleteConfirmationModal from '../components/common/DeleteConfirmationModal';
+import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
 import { toast } from 'react-hot-toast';
 import { db } from '../db';
 import { addToOutbox } from '../services/syncManager';
 
 const Products = () => {
     const { data: products, loading, error, forceSync } = useCachedData('products', '/products');
+
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [deletingProduct, setDeletingProduct] = useState(null);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
 
     const handleMutationSuccess = () => {
@@ -28,21 +31,16 @@ const Products = () => {
         try {
             await apiClient.delete(`/products/${deletingProduct._id}`);
             await db.products.delete(deletingProduct._id);
-            toast.success('Product deleted successfully!');
+            toast.success("Product deleted!");
             setDeletingProduct(null);
         } catch (err) {
             if (!err.response && !deletingProduct._id.startsWith('offline_')) {
-                toast.success('You are offline. Delete action saved locally and will sync later.');
-
+                toast.success('Offline: Delete action saved, will sync later.');
                 await db.products.delete(deletingProduct._id);
-
-                await addToOutbox({
-                    url: `/products/${deletingProduct._id}`,
-                    method: 'delete',
-                });
+                await addToOutbox({ url: `/products/${deletingProduct._id}`, method: 'delete' });
                 setDeletingProduct(null);
             } else {
-                toast.error('Failed to delete product. It might be linked to an order.');
+                toast.error("Failed to delete product.");
             }
         } finally {
             setActionLoading(false);
@@ -61,13 +59,42 @@ const Products = () => {
         }
     };
 
+    const handleScanSuccess = async (barcode) => {
+        toast.loading(`Searching for barcode: ${barcode}`);
+        try {
+            const response = await apiClient.get(`/products/barcode/${barcode}`);
+            toast.dismiss();
+            toast.success(`Product "${response.data.data.name}" found!`);
+            setEditingProduct(response.data.data);
+        } catch (err) {
+            toast.dismiss();
+            toast.error(err.response?.data?.message || 'Failed to find product.');
+        }
+    };
+
     return (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-text-primary">Inventory</h1>
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg shadow-md hover:bg-accent/90 transition-colors">
-                    <PlusCircle size={20} /> Add Product
-                </motion.button>
+                <div className="flex items-center gap-4">
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setIsScannerOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-secondary text-text-primary font-semibold rounded-lg shadow-md hover:bg-secondary/80 border border-border transition-colors"
+                    >
+                        <Camera size={20} />
+                        Scan Barcode
+                    </motion.button>
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-accent text-white font-semibold rounded-lg shadow-md hover:bg-accent/90 transition-colors"
+                    >
+                        <PlusCircle size={20} /> Add Product
+                    </motion.button>
+                </div>
             </div>
 
             {error && (
@@ -144,6 +171,12 @@ const Products = () => {
                     productName={deletingProduct.name}
                 />
             )}
+
+            <BarcodeScannerModal
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onScanSuccess={handleScanSuccess}
+            />
         </motion.div>
     );
 };
