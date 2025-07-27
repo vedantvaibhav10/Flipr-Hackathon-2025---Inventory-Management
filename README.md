@@ -22,7 +22,7 @@ https://github.com/user-attachments/assets/b74e0e9c-7cce-4335-953e-b22aa5ee2ebf
 
 v2 architecture diagram -
 
-<img width="2672" height="3840" alt="inv arch" src="https://github.com/user-attachments/assets/9b46a4ca-03c1-4426-96de-761edd2b0c72" />
+<img width="12891" height="2445" alt="v2 architecture" src="https://github.com/user-attachments/assets/dc6f4941-113e-4026-a774-ee52823ddbd7" />
 
 
 v2 Screenshots -
