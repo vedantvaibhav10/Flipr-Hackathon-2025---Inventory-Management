@@ -5,7 +5,7 @@ const openai = require('../services/openai.service');
 
 const createProduct = async (req, res) => {
     try {
-        const { name, sku, description, category, stockLevel, threshold, buyingPrice, sellingPrice, expiryDate } = req.body;
+        const { name, sku, description, category, stockLevel, threshold, buyingPrice, sellingPrice, expiryDate, barcode } = req.body;
 
         if (!name || !sku || !category || !buyingPrice || !sellingPrice) {
             return res.status(400).json({
@@ -23,7 +23,8 @@ const createProduct = async (req, res) => {
             threshold,
             buyingPrice,
             sellingPrice,
-            expiryDate
+            expiryDate,
+            barcode
         };
 
         if (req.file) {
@@ -52,7 +53,8 @@ const createProduct = async (req, res) => {
     }
     catch (error) {
         if (error.code === 11000) {
-            return res.status(409).json({ success: false, message: 'Product with this SKU already exists.' });
+            const field = Object.keys(error.keyValue)[0];
+            return res.status(409).json({ success: false, message: `Product with this ${field} already exists.` });
         }
         console.error(`Error creating product: ${error.message}`.red);
         return res.status(500).json({
@@ -65,7 +67,7 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, sku, description, category, stockLevel, threshold, buyingPrice, sellingPrice, expiryDate } = req.body;
+        const { name, sku, description, category, stockLevel, threshold, buyingPrice, sellingPrice, expiryDate, barcode } = req.body;
 
         const product = await Product.findById(id);
         if (!product) {
@@ -102,6 +104,7 @@ const updateProduct = async (req, res) => {
         product.threshold = threshold !== undefined ? Number(threshold) : product.threshold;
         product.buyingPrice = buyingPrice !== undefined ? Number(buyingPrice) : product.buyingPrice;
         product.sellingPrice = sellingPrice !== undefined ? Number(sellingPrice) : product.sellingPrice;
+        product.barcode = barcode || product.barcode;
 
         const updatedProduct = await product.save();
         console.log(`Product updated: ${updatedProduct}`.blue);
