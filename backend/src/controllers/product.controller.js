@@ -260,6 +260,7 @@ const decodeBarcodeImage = async (req, res) => {
     const imagePath = req.file.path;
     try {
         const { data, info } = await sharp(imagePath)
+            .png()
             .ensureAlpha()
             .raw()
             .toBuffer({ resolveWithObject: true });
