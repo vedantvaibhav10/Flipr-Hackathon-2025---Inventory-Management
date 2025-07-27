@@ -6,6 +6,7 @@ import SyncStatusIndicator from '../common/SyncStatusIndicator';
 import HealthStatusBar from '../common/HealthStatusBar';
 import { toast } from 'react-hot-toast';
 import { HardDrive } from 'lucide-react';
+import Chatbot from '../common/Chatbot';
 
 const MainLayout = () => {
     useEffect(() => {
@@ -50,6 +51,8 @@ const MainLayout = () => {
                 <HealthStatusBar />
                 <SyncStatusIndicator />
             </div>
+
+            <Chatbot />
         </div>
     );
 };
