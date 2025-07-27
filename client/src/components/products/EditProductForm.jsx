@@ -163,6 +163,7 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
                     <label htmlFor="edit-description" className="form-label">Description</label>
                     <textarea id="edit-description" name="description" value={detailsData.description} onChange={handleDetailsChange} rows="3" className="input-field"></textarea>
                 </div>
+                <FormField label="Barcode (UPC/EAN)" id="edit-barcode" name="barcode" value={detailsData.barcode} onChange={handleDetailsChange} />
                 <div className="pt-2">
                     <label className="block text-sm font-medium text-text-secondary mb-1">Update Image (Optional)</label>
                     <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-border border-dashed rounded-md">
@@ -183,7 +184,6 @@ const EditProductForm = ({ product, onProductUpdated, onClose }) => {
                         {detailsLoading ? <Loader2 className="animate-spin" /> : 'Save Details'}
                     </button>
                 </div>
-                <FormField label="Barcode (UPC/EAN)" id="edit-barcode" name="barcode" value={detailsData.barcode} onChange={handleDetailsChange} />
             </form>
 
             <form onSubmit={handleStockAdjustment} className="space-y-4 pt-4 border-t border-border">
