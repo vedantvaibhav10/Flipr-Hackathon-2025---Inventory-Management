@@ -1,7 +1,7 @@
 # InvTrack - AI-Powered Inventory Management System
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-blue)](https://inventory-management-topaz-tau.vercel.app/)
-[![Backend API](https://img.shields.io/badge/Backend%20API-Active-green)](https://inventory-management-backend-j0w6.onrender.com)
+[![Backend API](https://img.shields.io/badge/Backend%20API-Active-green)](https://inventory-management-backend-gmik.onrender.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 InvTrack is a modern, full-stack inventory management system designed to streamline your stock control processes. Built with a powerful MERN stack and integrated with OpenAI, it provides intelligent insights, automated alerts, and a beautiful, responsive user interface.
@@ -45,7 +45,7 @@ v2 Screenshots -
 ## 🌟 Live Demo
 
 - **Frontend:** [https://inventory-management-topaz-tau.vercel.app/](https://inventory-management-topaz-tau.vercel.app/)
-- **Backend API:** [https://inventory-management-backend-j0w6.onrender.com](https://inventory-management-backend-j0w6.onrender.com)
+- **Backend API:** [https://inventory-management-backend-gmik.onrender.com/](https://inventory-management-backend-gmik.onrender.com/)
 
 ## ✨ Key Features
 
