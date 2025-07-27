@@ -2,7 +2,15 @@ const Product = require('../models/product.model');
 const colors = require('colors');
 const { uploadOnCloudinary, deleteFromCloudinary } = require('../utils/cloudinary.util');
 const openai = require('../services/openai.service');
-const { BrowserBarcodeReader, NotFoundException } = require('@zxing/library');
+const {
+    MultiFormatReader,
+    BarcodeFormat,
+    DecodeHintType,
+    NotFoundException,
+    RGBLuminanceSource,
+    BinaryBitmap,
+    HybridBinarizer
+} = require('@zxing/library');
 const sharp = require('sharp');
 const fs = require('fs');
 
@@ -252,17 +260,19 @@ const decodeBarcodeImage = async (req, res) => {
     const imagePath = req.file.path;
     try {
         const { data, info } = await sharp(imagePath)
+            .ensureAlpha()
             .raw()
             .toBuffer({ resolveWithObject: true });
 
-        const rawImageData = {
-            data: new Uint8ClampedArray(data),
-            width: info.width,
-            height: info.height,
-        };
+        const luminanceSource = new RGBLuminanceSource(data, info.width, info.height);
+        const binaryBitmap = new BinaryBitmap(new HybridBinarizer(luminanceSource));
 
-        const codeReader = new BrowserBarcodeReader();
-        const result = codeReader.decodeFromImageData(rawImageData);
+        const hints = new Map();
+        const formats = [BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.CODE_128, BarcodeFormat.QR_CODE];
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
+
+        const reader = new MultiFormatReader();
+        const result = reader.decode(binaryBitmap, hints);
 
         fs.unlinkSync(imagePath);
 
