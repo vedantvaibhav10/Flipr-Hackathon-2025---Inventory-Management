@@ -28,17 +28,17 @@ View detailed architecture diagram here: https://drive.google.com/file/d/1zjsHgT
 
 v2 Screenshots -
 
-<img width="1918" height="892" alt="Screenshot 2025-07-27 190212" src="https://github.com/user-attachments/assets/4427807c-18f7-4cfd-901c-5d24b33077bb" />
-<img width="1918" height="907" alt="Screenshot 2025-07-27 190151" src="https://github.com/user-attachments/assets/afb7dac1-5663-4cc5-bb03-96cc742b6520" />
-<img width="1917" height="902" alt="Screenshot 2025-07-27 190132" src="https://github.com/user-attachments/assets/6d40ad2e-f9ad-43bc-b27e-66e85082ffe5" />
-<img width="1916" height="898" alt="Screenshot 2025-07-27 190116" src="https://github.com/user-attachments/assets/6a62ea07-c648-40f9-acfb-7cb7bfe163dc" />
+<img width="1918" height="903" alt="Screenshot 2025-07-27 185433" src="https://github.com/user-attachments/assets/9dce59f0-e159-4352-9a64-f901ca0ae966" />
+<img width="1916" height="912" alt="Screenshot 2025-07-27 185733" src="https://github.com/user-attachments/assets/509fed5b-f0ac-45dc-a29d-cb5ddf219f1e" />
+<img width="1917" height="898" alt="Screenshot 2025-07-27 185803" src="https://github.com/user-attachments/assets/b679906a-37c6-466e-be5d-705b4b2e0c12" />
 <img width="1916" height="887" alt="Screenshot 2025-07-27 190039" src="https://github.com/user-attachments/assets/a8cfd35e-a5ea-4437-a749-ae8588899008" />
+<img width="1916" height="898" alt="Screenshot 2025-07-27 190116" src="https://github.com/user-attachments/assets/6a62ea07-c648-40f9-acfb-7cb7bfe163dc" />
+<img width="1917" height="902" alt="Screenshot 2025-07-27 190132" src="https://github.com/user-attachments/assets/6d40ad2e-f9ad-43bc-b27e-66e85082ffe5" />
+<img width="1918" height="907" alt="Screenshot 2025-07-27 190151" src="https://github.com/user-attachments/assets/afb7dac1-5663-4cc5-bb03-96cc742b6520" />
+<img width="1918" height="906" alt="Screenshot 2025-07-27 185536" src="https://github.com/user-attachments/assets/0e99e74d-6d0b-4b9e-a797-874ae2f9a01c" />
 <img width="1912" height="905" alt="Screenshot 2025-07-27 190017" src="https://github.com/user-attachments/assets/f99136b0-9c21-4fe0-8b62-db4e6b3ebfa5" />
 <img width="1918" height="900" alt="Screenshot 2025-07-27 185945" src="https://github.com/user-attachments/assets/107ec680-2ce8-44b5-8b0c-8dded4c84dee" />
-<img width="1917" height="898" alt="Screenshot 2025-07-27 185803" src="https://github.com/user-attachments/assets/b679906a-37c6-466e-be5d-705b4b2e0c12" />
-<img width="1916" height="912" alt="Screenshot 2025-07-27 185733" src="https://github.com/user-attachments/assets/509fed5b-f0ac-45dc-a29d-cb5ddf219f1e" />
-<img width="1918" height="906" alt="Screenshot 2025-07-27 185536" src="https://github.com/user-attachments/assets/0e99e74d-6d0b-4b9e-a797-874ae2f9a01c" />
-<img width="1918" height="903" alt="Screenshot 2025-07-27 185433" src="https://github.com/user-attachments/assets/9dce59f0-e159-4352-9a64-f901ca0ae966" />
+<img width="1918" height="892" alt="Screenshot 2025-07-27 190212" src="https://github.com/user-attachments/assets/4427807c-18f7-4cfd-901c-5d24b33077bb" />
 
 
 ## 🌟 Live Demo
