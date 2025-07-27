@@ -18,6 +18,8 @@ Staff Password: 123456
 
 Inventory Management v2 Demo Video - 
 
+https://github.com/user-attachments/assets/45a1df2f-c7b8-4de5-a65d-75f5c6d9aead
+
 In Depth Project Architecture Explanation - 
 
 https://github.com/user-attachments/assets/e4434203-ffd3-4c77-90df-0d53bbaad7a2
