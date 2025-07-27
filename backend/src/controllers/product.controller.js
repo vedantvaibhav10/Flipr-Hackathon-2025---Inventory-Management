@@ -3,7 +3,7 @@ const colors = require('colors');
 const { uploadOnCloudinary, deleteFromCloudinary } = require('../utils/cloudinary.util');
 const openai = require('../services/openai.service');
 const { BrowserBarcodeReader, NotFoundException } = require('@zxing/library');
-const jimp = require('jimp');
+const Jimp = require('jimp');
 const fs = require('fs');
 
 
@@ -252,7 +252,7 @@ const decodeBarcodeImage = async (req, res) => {
 
     const imagePath = req.file.path;
     try {
-        const image = await jimp.read(imagePath);
+        const image = await Jimp.read(imagePath);
         const rawImageData = {
             data: new Uint8ClampedArray(image.bitmap.data),
             width: image.bitmap.width,
