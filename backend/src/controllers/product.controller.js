@@ -3,9 +3,8 @@ const colors = require('colors');
 const { uploadOnCloudinary, deleteFromCloudinary } = require('../utils/cloudinary.util');
 const openai = require('../services/openai.service');
 const { BrowserBarcodeReader, NotFoundException } = require('@zxing/library');
-const Jimp = require('jimp');
+const sharp = require('sharp');
 const fs = require('fs');
-
 
 const createProduct = async (req, res) => {
     try {
@@ -252,12 +251,14 @@ const decodeBarcodeImage = async (req, res) => {
 
     const imagePath = req.file.path;
     try {
-        const image = await Jimp.Jimp.read(imagePath);
+        const { data, info } = await sharp(imagePath)
+            .raw()
+            .toBuffer({ resolveWithObject: true });
 
         const rawImageData = {
-            data: new Uint8ClampedArray(image.bitmap.data),
-            width: image.bitmap.width,
-            height: image.bitmap.height,
+            data: new Uint8ClampedArray(data),
+            width: info.width,
+            height: info.height,
         };
 
         const codeReader = new BrowserBarcodeReader();
@@ -271,7 +272,7 @@ const decodeBarcodeImage = async (req, res) => {
         if (error instanceof NotFoundException) {
             return res.status(404).json({ success: false, message: 'No barcode could be found in the image.' });
         }
-        console.error('Error decoding barcode:', error);
+        console.error('Error decoding barcode with sharp:', error);
         return res.status(500).json({ success: false, message: 'Failed to process the barcode image.' });
     }
 };
