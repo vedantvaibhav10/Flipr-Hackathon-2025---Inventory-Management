@@ -16,16 +16,19 @@ Admin Password: 123456
 Staff Email: staff@example.com
 Staff Password: 123456
 
-v2 Demo Video - 
+Inventory Management v2 Demo Video - 
 
+In Depth Project Architecture Explanation - 
 
-v2 architecture diagram -
+https://github.com/user-attachments/assets/e4434203-ffd3-4c77-90df-0d53bbaad7a2
+
+Inventory Management v2 architecture diagram -
 
 ![v2 detailed architecture (1)](https://github.com/user-attachments/assets/9ba1dd84-14ae-4f9c-aac2-4ce09964622d)
 
 View detailed architecture diagram here: https://drive.google.com/file/d/1zjsHgTla-Eg7HwzSN69jDYSv8apMWJrI/view?usp=sharing
 
-v2 Screenshots -
+Inventory Management v2 Screenshots -
 
 <img width="1918" height="903" alt="Screenshot 2025-07-27 185433" src="https://github.com/user-attachments/assets/9dce59f0-e159-4352-9a64-f901ca0ae966" />
 <img width="1916" height="912" alt="Screenshot 2025-07-27 185733" src="https://github.com/user-attachments/assets/509fed5b-f0ac-45dc-a29d-cb5ddf219f1e" />
