@@ -1,4 +1,4 @@
-# InvTrack - AI-Powered Inventory Management System
+# InvTrack - AI-Powered Inventory Management System (With complete offline support)
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-blue)](https://inventory-management-topaz-tau.vercel.app/)
 [![Backend API](https://img.shields.io/badge/Backend%20API-Active-green)](https://inventory-management-backend-gmik.onrender.com)
@@ -15,6 +15,8 @@ Admin Password: 123456
 
 Staff Email: staff@example.com
 Staff Password: 123456
+
+Note - An email can only be registered as Admin from the DB due to security purposes.
 
 Inventory Management v2 Demo Video - 
 
