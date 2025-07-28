@@ -144,29 +144,35 @@ cp .env.example .env
 Create a `.env` file in the backend directory with the following variables:
 
 ```env
-# Database
-MONGODB_URI=your_mongodb_connection_string
+PORT=4000
+MONGODB_URL=your_mongodb_connection_string
 
-# JWT Secret
-JWT_SECRET=your_jwt_secret_key
-
-# Cloudinary Configuration
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
-# OpenAI Configuration
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USER=your_mail_user
+MAIL_PASS=your_mail_pass
+
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=1d
+JWT_COOKIE_EXPIRES=1
+
+NODE_ENV=development
+
+ADMIN_EMAIL=your_admin_email@example.com
+
 OPENAI_API_KEY=your_openai_api_key
 
-# Email Configuration (Nodemailer)
-EMAIL_HOST=your_email_host
-EMAIL_PORT=your_email_port
-EMAIL_USER=your_email_username
-EMAIL_PASS=your_email_password
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 
-# Server Configuration
-PORT=5000
-NODE_ENV=development
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
 ```
 
 ```bash
