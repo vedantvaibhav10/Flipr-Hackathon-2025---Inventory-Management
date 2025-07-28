@@ -1,4 +1,4 @@
-# InvTrack - AI-Powered Inventory Management System
+# InvTrack - AI-Powered Inventory Management System (With complete offline support)
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-blue)](https://inventory-management-topaz-tau.vercel.app/)
 [![Backend API](https://img.shields.io/badge/Backend%20API-Active-green)](https://inventory-management-backend-gmik.onrender.com)
@@ -6,7 +6,7 @@
 
 InvTrack is a modern, full-stack inventory management system designed to streamline your stock control processes. Built with a powerful MERN stack and integrated with OpenAI, it provides intelligent insights, automated alerts, a beautiful responsive UI, and a complete offline-first experience.
 
-Postman Link for APIs testing - [https://chatappteam-4066.postman.co/workspace/Inventory-Management-System~fca858b0-00b0-4251-ae0d-935c5fdfe865/collection/29392182-d91216a6-4b39-4eae-9bb0-210ac3ca2da3?action=share&creator=29392182&active-environment=29392182-e6dcb596-3f9b-4b76-9e9a-506407f3157a](https://chatappteam-4066.postman.co/workspace/Inventory-Management-System~fca858b0-00b0-4251-ae0d-935c5fdfe865/collection/29392182-d91216a6-4b39-4eae-9bb0-210ac3ca2da3?action=share&creator=29392182&active-environment=29392182-e6dcb596-3f9b-4b76-9e9a-506407f3157a)
+Postman Link for APIs testing - [View API Documentation](https://chatappteam-4066.postman.co/workspace/Inventory-Management-System~fca858b0-00b0-4251-ae0d-935c5fdfe865/collection/29392182-d91216a6-4b39-4eae-9bb0-210ac3ca2da3?action=share&creator=29392182&active-environment=29392182-e6dcb596-3f9b-4b76-9e9a-506407f3157a)
 
 For testing -
 
@@ -16,16 +16,23 @@ Admin Password: 123456
 Staff Email: staff@example.com
 Staff Password: 123456
 
-v2 Demo Video - 
+Note - An email can only be registered as Admin from the DB due to security purposes.
 
+Inventory Management v2 Demo Video - 
 
-v2 architecture diagram -
+https://github.com/user-attachments/assets/45a1df2f-c7b8-4de5-a65d-75f5c6d9aead
+
+In Depth Project Architecture Explanation - 
+
+https://github.com/user-attachments/assets/e4434203-ffd3-4c77-90df-0d53bbaad7a2
+
+Inventory Management v2 architecture diagram -
 
 ![v2 detailed architecture (1)](https://github.com/user-attachments/assets/9ba1dd84-14ae-4f9c-aac2-4ce09964622d)
 
 View detailed architecture diagram here: https://drive.google.com/file/d/1zjsHgTla-Eg7HwzSN69jDYSv8apMWJrI/view?usp=sharing
 
-v2 Screenshots -
+Inventory Management v2 Screenshots -
 
 <img width="1918" height="903" alt="Screenshot 2025-07-27 185433" src="https://github.com/user-attachments/assets/9dce59f0-e159-4352-9a64-f901ca0ae966" />
 <img width="1916" height="912" alt="Screenshot 2025-07-27 185733" src="https://github.com/user-attachments/assets/509fed5b-f0ac-45dc-a29d-cb5ddf219f1e" />
@@ -137,29 +144,35 @@ cp .env.example .env
 Create a `.env` file in the backend directory with the following variables:
 
 ```env
-# Database
-MONGODB_URI=your_mongodb_connection_string
+PORT=4000
+MONGODB_URL=your_mongodb_connection_string
 
-# JWT Secret
-JWT_SECRET=your_jwt_secret_key
-
-# Cloudinary Configuration
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
-# OpenAI Configuration
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USER=your_mail_user
+MAIL_PASS=your_mail_pass
+
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=1d
+JWT_COOKIE_EXPIRES=1
+
+NODE_ENV=development
+
+ADMIN_EMAIL=your_admin_email@example.com
+
 OPENAI_API_KEY=your_openai_api_key
 
-# Email Configuration (Nodemailer)
-EMAIL_HOST=your_email_host
-EMAIL_PORT=your_email_port
-EMAIL_USER=your_email_username
-EMAIL_PASS=your_email_password
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 
-# Server Configuration
-PORT=5000
-NODE_ENV=development
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
 ```
 
 ```bash
