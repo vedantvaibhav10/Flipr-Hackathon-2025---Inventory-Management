@@ -4,7 +4,7 @@
 [![Backend API](https://img.shields.io/badge/Backend%20API-Active-green)](https://inventory-management-backend-gmik.onrender.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-InvTrack is a modern, full-stack inventory management system designed to streamline your stock control processes. Built with a powerful MERN stack and integrated with OpenAI, it provides intelligent insights, automated alerts, a beautiful responsive UI, and a complete offline-first experience.
+InvTrack is a modern, full-stack inventory management system designed to streamline your stock control processes. Built with a powerful MERN stack and integrated with OpenAI, it provides intelligent insights, automated alerts, a beautiful responsive UI, and a complete offline-first and smooth experience.
 
 Postman Link for APIs testing - [View API Documentation](https://chatappteam-4066.postman.co/workspace/Inventory-Management-System~fca858b0-00b0-4251-ae0d-935c5fdfe865/collection/29392182-d91216a6-4b39-4eae-9bb0-210ac3ca2da3?action=share&creator=29392182&active-environment=29392182-e6dcb596-3f9b-4b76-9e9a-506407f3157a)
 
